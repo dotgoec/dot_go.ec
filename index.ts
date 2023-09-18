@@ -1,7 +1,3 @@
-import { Map } from "ol";
-
-console.log(Map);
-
 Bun.serve({
     port: process.env.PORT,
     hostname: process.env.IP,
