@@ -8,7 +8,7 @@ Bun.serve({
       console.log(filepath);
       const file = Bun.file(filepath);
       if (file.size != 0) {
-        return new Response(pathfile);
+        return new Response(file);
       } else {
         return new Response("404!");
       }
