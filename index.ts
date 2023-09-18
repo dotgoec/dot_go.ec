@@ -1,3 +1,5 @@
+import * as ol from 'ol';
+
 Bun.serve({
     port: process.env.PORT,
     hostname: process.env.IP,
@@ -10,7 +12,7 @@ Bun.serve({
       if (file.size != 0) {
         return new Response(file);
       } else {
-        throw new Error("🤔");
+        throw new Error("404: File not found!");
       }
     },
     error(error) {
