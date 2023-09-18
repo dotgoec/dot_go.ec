@@ -11,8 +11,8 @@
     <body>
         <div id="map" style="width: 100%; height: 100%"></div>
         <script>
-            const defaultPos = [-2.192029, -79.880256];
-            var map = L.map('map');
+            const defaultPos = new L.LatLng(-2.192029, -79.880256);
+            var map = L.map('map'), livePos;
             L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
                 attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -24,7 +24,8 @@
             
             const geoOk = (pos) => {
                 console.log(pos);
-                setMap([pos.coords.Latitude, pos.coords.Longitude]);
+                livePos = new L.LatLng(pos.coords.Latitude, pos.coords.Longitude);
+                setMap(livePos);
             };
             const geoErr = (err) => {
                 console.error(err);
