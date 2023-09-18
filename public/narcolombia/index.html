@@ -24,7 +24,7 @@
             
             const geoOk = (pos) => {
                 console.log(pos);
-                setMap([pos.Latitude, pos.Longitude]);
+                setMap([pos.coords.Latitude, pos.coords.Longitude]);
             };
             const geoErr = (err) => {
                 console.error(err);
