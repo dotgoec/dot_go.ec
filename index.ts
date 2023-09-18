@@ -1,4 +1,4 @@
-import * as ol from 'ol';
+import * as ol from "ol";
 
 console.log(ol);
 
