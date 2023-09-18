@@ -10,7 +10,7 @@ Bun.serve({
       if (file.size != 0) {
         return new Response(file);
       } else {
-        return new Response("404!");
+        throw new Error("404!");
       }
     },
   });
