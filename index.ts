@@ -1,6 +1,6 @@
-import * as ol from "ol";
+import { Map } from "ol";
 
-console.log(ol);
+console.log(Map);
 
 Bun.serve({
     port: process.env.PORT,
