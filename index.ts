@@ -3,9 +3,7 @@ Bun.serve({
     hostname: process.env.IP,
     fetch(req) {
       return new Response(`
-        <html>
-        <head></head>
-        <body>Bun!<br>🤔</body>
-        </hhtml>`);
+      DOT_GO
+      page in construction`);
     },
   });
