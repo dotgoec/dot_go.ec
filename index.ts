@@ -3,7 +3,7 @@ Bun.serve({
     hostname: process.env.IP,
     fetch(req) {
       const url = new URL(req.url);
-      const isindex = url.pathname.search(".") > 0 ? "" : "index.html";
+      const isindex = url.pathname.search(/\./) >= 0 ? "" : (url.pathname.search(/\/$/) >= 0 ? "" : "/") + "index.html";
       const filepath = "public" + url.pathname + isindex;
       console.log(url.pathname,filepath);
       const file = Bun.file(filepath);
