@@ -10,7 +10,7 @@ Bun.serve({
       if (file.size != 0) {
         return new Response(file);
       } else {
-        throw new Error("404: File not found!");
+        throw new Error("🤔");
       }
     },
     error(error) {
