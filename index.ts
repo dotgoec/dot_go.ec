@@ -3,9 +3,11 @@ Bun.serve({
     hostname: process.env.IP,
     fetch(req) {
       const url = new URL(req.url);
-      console.log("public" + url.pathname + (url.pathname.search(".") >= 0 ? "" : "index.html"));
-      const pathfile = Bun.file("public" + url.pathname + (url.pathname.search(".") >= 0 ? "" : "index.html"));
-      if (pathfile.size != 0) {
+      const isindex = url.pathname.search(".") >= 0 ? "" : "index.html";
+      filepath = "public" + url.pathname + isindex;
+      console.log(filepath);
+      const file = Bun.file(filepath);
+      if (file.size != 0) {
         return new Response(pathfile);
       } else {
         return new Response("404!");
