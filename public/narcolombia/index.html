@@ -1,38 +1,204 @@
 <html>
     <head>
         <title>NarColombia</title>
-        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-        crossorigin=""/>
-        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-        crossorigin=""></script>
+        <meta property="og:title" content="En cualquier parte de Guayaquil roban?" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://dotgoec.alwaysdata.net/narcolombia" />
+        <meta property="og:image" content="https://dotgoec.alwaysdata.net/DotGoPix.png" />
+        <meta property="og:description" content="Cartografías de robos urbanos en Guayaquil - Narcolombia" />
+        <meta property='og:image:width' content='400' />
+        <meta property='og:image:height' content='400' />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+        <style>
+            body {
+                padding: 0;
+                margin: 0;
+            }
+            html, body, #map {
+                height: 100%;
+                width: 100vw;
+            }
+            #addPointForm {
+                width: 100%;
+                text-align: center;
+            }
+            .pname {
+                font-weight: bold;
+                text-align: center;
+            }
+            .pnationality {
+                text-align: center;
+            }
+        </style>
     </head>
     <body>
-        <div id="map" style="width: 100%; height: 100%"></div>
+        <div id="map"></div>
         <script>
-            const defaultPos = new L.LatLng(-2.192029, -79.880256);
-            var map = L.map('map'), livePos;
-            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            const WS_ADDRESS = "wss://dotgoec.alwaysdata.net/ws";
+            var socket = new WebSocket(WS_ADDRESS);
+            const defaultLatLng = new L.LatLng(-2.192029, -79.880256), addPointBtn = "<a id='pointa' href='javascript:addPoint()'><button id='pointbtn'>A&ntilde;adir Punto</button></a>";
+            var map = L.map('map').fitWorld(), scale = L.control.scale().addTo(map), clickPopup = addPointBtn, addPointForm = document.createElement('form');
+            var liveLatLng, livePos = L.circle(defaultLatLng, {
+                color: '#333',
+                fillColor: '#666',
+                fillOpacity: 0.3,
+                radius: 100
+            }), livePosID;
+            var liveUpdateID, liveUpdate;
+            var clickMarker = L.marker(defaultLatLng).bindPopup(clickPopup), redIcon = L.icon({
+                iconUrl: 'google-maps-icon-png-23.png',
+                iconSize: [38, 38],
+                iconAnchor: [22, 38],
+                popupAnchor: [-3, -30],
+                // shadowUrl: 'my-icon-shadow.png',
+                // shadowSize: [68, 95],
+                // shadowAnchor: [22, 94]
+            });
+            var points = [], pointsGroup = L.layerGroup(), layerControl = L.control.layers().addTo(map);
+            
+            socket.addEventListener("message", event => {
+                let msg;
+                try{
+                    msg = JSON.parse(event.data);
+                } catch(err) {
+                    msg = [event.data];
+                }
+                console.log("NEW MESSAGE:\n",msg);
+                switch (msg[0]) {
+                    case "points":
+                        points = [];
+                        for ( i = 0; i < msg[1].length; i++ ) {
+                            const p = msg[1][i].split(',');
+                            console.log(p);
+                            if ( p.length === 4 ) {
+                                if ( !isNaN(p[1]) && !isNaN(p[2]) ) {
+                                    const pi = points.push(L.marker([p[1],p[2]],{icon: redIcon}).bindPopup(`<a class=\"pbutton\" href=\"javascript:map.flyTo(new L.LatLng(${p[1]},${p[2]}), 19)\"><button><span class=\"pname\">${p[0]}</span><br /><span class=\"pnationality\">${p[3]}</span></button></a>`)) - 1;
+                                    points[pi].addTo(pointsGroup);
+                                }
+                            }
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            });
+            
+            socket.onopen = (e) => {
+                console.log("CONNECTED\n",e);
+            };
+            
+            var osmLayers = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                minZoom: 2,
                 maxZoom: 19,
-                attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
-
-            function setMap(pos) {
-                map.setView(pos, 13);
+            
+            var jawgStreetsLayers = L.tileLayer('https://{s}.tile.jawg.io/jawg-streets/{z}/{x}/{y}{r}.png?access-token={accessToken}', {
+                attribution: '<a href="http://jawg.io" title="Tiles Courtesy of Jawg Maps" target="_blank">&copy; <b>Jawg</b>Maps</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                minZoom: 2,
+                maxZoom: 22,
+                subdomains: 'abcd',
+                accessToken: 'ewBj0uIbEw1tVKCJkrhA8KAd7i4OFNRxWozoQnGyE6YOd9dvmh4Ft2vuaXZqRiUW'
+            });
+            
+            layerControl.addBaseLayer(osmLayers, "OSM Map");
+            layerControl.addBaseLayer(jawgStreetsLayers, "Jawg Streets");
+            
+            function addLayers(live = false) {
+                if ( live ) {
+                    layerControl.addOverlay(livePos, "Tu posici&oacute;n actual");
+                    // livePos.addTo(map);
+                }
+                layerControl.addOverlay(pointsGroup, "Puntos de usuarios");
+                pointsGroup.addTo(map);
+                layerControl.addOverlay(clickMarker, "Nuevo punto");
+                clickMarker.addTo(map).dragging.enable();
+                layerControl.expand();
             }
             
             const geoOk = (pos) => {
-                console.log(pos.coords);
-                livePos = new L.LatLng(pos.coords.latitude, pos.coords.longitude);
-                setMap(livePos);
+                console.log(pos);
+                if ( liveLatLng === undefined ) {
+                    liveLatLng = new L.LatLng(pos.coords.latitude, pos.coords.longitude);
+                    livePos.setLatLng(liveLatLng);
+                    livePos.addEventListener('click',(e)=>{
+                        console.log("LIVE CLICK:\n",e);
+                        map.flyTo(liveLatLng, 18);
+                    });
+                    clickMarker.setLatLng(liveLatLng);
+                    addLayers(true);
+                    setTimeout(()=>{map.setView(liveLatLng, 12)},500);
+                } else {
+                    liveLatLng.lat = pos.coords.latitude;
+                    liveLatLng.lng = pos.coords.longitude;
+                }
+                livePos.setRadius(pos.coords.accuracy);
             };
             const geoErr = (err) => {
                 console.error(err);
-                setMap(defaultPos);
+                if ( liveLatLng === undefined ) {
+                    setTimeout(()=>{map.setView(defaultLatLng, 12)},500);
+                    addLayers(false);
+                }
             };
             
-            navigator.geolocation.getCurrentPosition(geoOk,geoErr);
+            livePosID = navigator.geolocation.watchPosition(geoOk,geoErr);
+            
+            liveUpdate = () => {
+                if ( liveLatLng != undefined ) livePos.setLatLng(liveLatLng);
+                if ( socket.readyState === 3 ) {
+                    console.log("DISCONNECTED.\nRELOADING...");
+                    location.reload();
+                    /*
+                    socket = new WebSocket(WS_ADDRESS);
+                    socket.onopen = (e) => {
+                        console.log("CONNECTED\n",e);
+                    };
+                    socket.onerror = function(err) {
+                        console.error('Socket encountered error: ', err.message, 'Closing socket');
+                        socket.close();
+                    };
+                    */
+                }
+                liveUpdateID = requestAnimationFrame(liveUpdate);
+            };
+            
+            liveUpdateID = requestAnimationFrame(liveUpdate);
+            
+            function sendForm() {
+                // if ( socket.readyState > 1 ) socket = new WebSocket(WS_ADDRESS);
+                socket.send(JSON.stringify(["addPoint",`${document.getElementById("pointName").value},${clickMarker.getLatLng().lat},${clickMarker.getLatLng().lng},${document.getElementById("pointNationality").value}\n`]));
+                clickPopup = addPointBtn;
+                clickMarker.togglePopup()
+                clickMarker.setPopupContent(clickPopup);
+            }
+            
+            addPointForm.id = "addPointForm";
+            addPointForm.action = '';
+            addPointForm.innerHTML = `
+                <label for=\"name\">Nombre: </label><br />
+                <input type=\"text\" name=\"Name\" id=\"pointName\" placeholder=\"Nombre o An&oacute;nimo\" required /><br />
+                <label for=\"nationality\">Nacionalidad: </label><br />
+                <input type=\"text\" name=\"Nationality\" id=\"pointNationality\" placeholder=\"Ciudad o pa&iacute;s\" required /><br />
+                <input type=\"submit\" id=\"pointSubmit\" value=\"A&ntilde;adir Punto\" formaction=\"javascript:sendForm()\"/>`
+            
+            function addPoint() {
+                console.log("Punto");
+                clickPopup = addPointForm;
+                clickMarker.setPopupContent(addPointForm);
+            }
+            
+            function onMapClick(e) {
+                console.log("MAP CLICK:\n",e);
+                clickMarker.setLatLng(e.latlng);
+                if ( clickMarker.dragging != undefined ) {
+                    clickMarker.setPopupContent(clickPopup).openPopup().dragging.enable();
+                }
+            }
+            
+            map.on('click', onMapClick);
         </script>
     </body>
 </html>
