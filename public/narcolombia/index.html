@@ -36,6 +36,9 @@
     <body>
         <div id="map"></div>
         <script>
+            var debugging = false;
+            if ( location.hash.search('debug') > -1 ) debugging = true;
+            
             const WS_ADDRESS = "wss://dotgoec.alwaysdata.net/ws";
             var socket = new WebSocket(WS_ADDRESS);
             const defaultLatLng = new L.LatLng(-2.192029, -79.880256), addPointBtn = "<a id='pointa' href='javascript:addPoint()'><button id='pointbtn'>A&ntilde;adir Punto</button></a>";
@@ -58,23 +61,23 @@
             });
             var points = [], pointsGroup = L.layerGroup(), layerControl = L.control.layers().addTo(map);
             
-            socket.addEventListener("message", event => {
+            const onMessage = (event) => {
                 let msg;
                 try{
                     msg = JSON.parse(event.data);
                 } catch(err) {
                     msg = [event.data];
                 }
-                console.log("NEW MESSAGE:\n",msg);
+                if (debugging) console.log("NEW MESSAGE:\n",msg);
                 switch (msg[0]) {
                     case "points":
                         points = [];
                         for ( i = 0; i < msg[1].length; i++ ) {
                             const p = msg[1][i].split(',');
-                            console.log(p);
+                            if (debugging) console.log(p);
                             if ( p.length === 4 ) {
                                 if ( !isNaN(p[1]) && !isNaN(p[2]) ) {
-                                    const pi = points.push(L.marker([p[1],p[2]],{icon: redIcon}).bindPopup(`<a class=\"pbutton\" href=\"javascript:map.flyTo(new L.LatLng(${p[1]},${p[2]}), 19)\"><button><span class=\"pname\">${p[0]}</span><br /><span class=\"pnationality\">${p[3]}</span></button></a>`)) - 1;
+                                    const pi = points.push(L.marker([p[1],p[2]],{icon: redIcon}).bindPopup(`<a class=\"pbutton\" href=\"javascript:map.flyTo(new L.LatLng(${p[1]},${p[2]}), 20)\"><button><span class=\"pname\">${p[0]}</span><br /><span class=\"pnationality\">${p[3]}</span></button></a>`)) - 1;
                                     points[pi].addTo(pointsGroup);
                                 }
                             }
@@ -83,15 +86,18 @@
                     default:
                         break;
                 }
-            });
-            
-            socket.onopen = (e) => {
-                console.log("CONNECTED\n",e);
             };
+            
+            const onOpen = (e) => {
+                if (debugging) console.log("CONNECTED\n",e);
+            };
+            
+            socket.addEventListener('message', onMessage);
+            socket.addEventListener('open', onOpen);
             
             var osmLayers = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 minZoom: 2,
-                maxZoom: 19,
+                maxZoom: 20,
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
             
@@ -119,13 +125,13 @@
             }
             
             const geoOk = (pos) => {
-                console.log(pos);
+                if (debugging) console.log(pos);
                 if ( liveLatLng === undefined ) {
                     liveLatLng = new L.LatLng(pos.coords.latitude, pos.coords.longitude);
                     livePos.setLatLng(liveLatLng);
                     livePos.addEventListener('click',(e)=>{
-                        console.log("LIVE CLICK:\n",e);
-                        map.flyTo(liveLatLng, 18);
+                        if (debugging) console.log("LIVE CLICK:\n",e);
+                        map.flyTo(liveLatLng, 20);
                     });
                     clickMarker.setLatLng(liveLatLng);
                     addLayers(true);
@@ -149,18 +155,14 @@
             liveUpdate = () => {
                 if ( liveLatLng != undefined ) livePos.setLatLng(liveLatLng);
                 if ( socket.readyState === 3 ) {
-                    console.log("DISCONNECTED.\nRELOADING...");
-                    location.reload();
-                    /*
+                    if (debugging) console.log("DISCONNECTED.\nRELOADING...");
                     socket = new WebSocket(WS_ADDRESS);
-                    socket.onopen = (e) => {
-                        console.log("CONNECTED\n",e);
-                    };
-                    socket.onerror = function(err) {
+                    socket.addEventListener('message', onMessage);
+                    socket.addEventListener('open', onOpen);
+                    socket.addEventListener('error', (err) => {
                         console.error('Socket encountered error: ', err.message, 'Closing socket');
                         socket.close();
-                    };
-                    */
+                    });
                 }
                 liveUpdateID = requestAnimationFrame(liveUpdate);
             };
@@ -185,13 +187,13 @@
                 <input type=\"submit\" id=\"pointSubmit\" value=\"A&ntilde;adir Punto\" formaction=\"javascript:sendForm()\"/>`
             
             function addPoint() {
-                console.log("Punto");
+                if (debugging) console.log("Punto");
                 clickPopup = addPointForm;
                 clickMarker.setPopupContent(addPointForm);
             }
             
             function onMapClick(e) {
-                console.log("MAP CLICK:\n",e);
+                if (debugging) console.log("MAP CLICK:\n",e);
                 clickMarker.setLatLng(e.latlng);
                 if ( clickMarker.dragging != undefined ) {
                     clickMarker.setPopupContent(clickPopup).openPopup().dragging.enable();
