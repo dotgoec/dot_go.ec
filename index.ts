@@ -8,7 +8,7 @@ const addPoint = async (p) => {
   // pwriter.write(p.toString());
   // pwriter.flush(); // write buffer to disk
   // pwriter.unref();
-  await Bun.write(pointsPath,p);
+  Bun.write(pointsPath,p);
 };
 
 const wss = Bun.serve({

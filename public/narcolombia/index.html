@@ -19,6 +19,7 @@
             html, body, #map {
                 height: 100%;
                 width: 100vw;
+                z-index: 0;
             }
             #addPointForm {
                 width: 100%;
@@ -31,14 +32,82 @@
             .pnationality {
                 text-align: center;
             }
+            #info, #loading {
+                position: absolute;
+                top: 0;
+                left: 0;
+                padding: 0;
+                margin: 0;
+                width: 100vw;
+                height: 100vh;
+            }
+            #info {
+                background-color: #000000cc;
+                /* margin: calc(min(10vw,10vh)); */
+                display: flex;
+                font-family: system-ui;
+            }
+            #infoText {
+                background-color: #000000cc;
+                width: 100%;
+                margin: auto 0 auto 0;
+                vertical-align: middle;
+                text-align: center;
+                color: #fff;
+            }
+            #infoText ol {
+                /* list-style-position: inside; */
+                text-align: left;
+                padding: 0 20% 0 20%;
+                width: 60%;
+            }
+            #infoText span {
+                display: flex;
+                padding: 0 10% 0 10%;
+                width: 80%;
+                font-size: 0.8em;
+            }
+            #loading {
+                background-color: #66666666;
+                z-index: 100;
+            }
+            #loadgif {
+                position: relative;
+                -ms-transform: translate(-50%,-50%);
+                transform: translate(-50%,-50%);
+                top: 50%;
+                left: 50%;
+            }
+            [hidden] {
+                display: none !important;
+            }
         </style>
     </head>
     <body>
         <div id="map"></div>
+        <div id="info" style="z-index: -10;" hidden>
+            <div id="infoText">
+                &nbsp;<hr />
+                <h3>Instrucciones de la muestra</h3>
+                <ol type="1" style="">
+                    <li>Busca la direcci&oacute;n del sitio donde te han robado (si fue un bus o taxi, puedes poner un punto de referencia)</li>
+                    <li>Con el pin azul, a&ntilde;ade el punto con los datos que te solicitan (puedes arrastrar el pin azul o solo tocar o dar click en el mapa para moverlo)</li>
+                    <li>Dale click a "A&ntilde;adir Punto" una vez hayas llenado los datos*</li>
+                    <li>Puedes observar los otros puntos y los nombres de las dem&aacute;s personas</li>
+                </ol><br />
+                
+                <span>* Puedes colocar tu nombre y apellido, o simplemente poner "an&oacute;nimo" si tienes miedo, preocupaci&oacute;n o no quieres usar tu nombre.</span><br />
+                <hr />
+                <a id="infobtnlink" href='javascript:infoToggle()'><button id='infobtn'>Siguiente</button></a>
+                <hr />&nbsp;
+            </div>
+        </div>
+        <div id="loading"><img id="loadgif" src='../DotGoLoadDark.gif' /></div>
         <script>
             var debugging = false;
             if ( location.hash.search('debug') > -1 ) debugging = true;
-            
+            var info = document.getElementById('info');
+            var loading = document.getElementById('loading');
             const WS_ADDRESS = "wss://dotgoec.alwaysdata.net/ws";
             var socket = new WebSocket(WS_ADDRESS);
             const defaultLatLng = new L.LatLng(-2.192029, -79.880256), addPointBtn = "<a id='pointa' href='javascript:addPoint()'><button id='pointbtn'>A&ntilde;adir Punto</button></a>";
@@ -52,9 +121,9 @@
             var liveUpdateID, liveUpdate;
             var clickMarker = L.marker(defaultLatLng).bindPopup(clickPopup), redIcon = L.icon({
                 iconUrl: 'google-maps-icon-png-23.png',
-                iconSize: [38, 38],
-                iconAnchor: [22, 38],
-                popupAnchor: [-3, -30],
+                iconSize: [22, 40],
+                iconAnchor: [11, 40],
+                popupAnchor: [0, -33],
                 // shadowUrl: 'my-icon-shadow.png',
                 // shadowSize: [68, 95],
                 // shadowAnchor: [22, 94]
@@ -95,33 +164,51 @@
             socket.addEventListener('message', onMessage);
             socket.addEventListener('open', onOpen);
             
-            var osmLayers = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            var esriWorldImageryLayers = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
                 minZoom: 2,
-                maxZoom: 20,
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            }).addTo(map);
-            
-            var jawgStreetsLayers = L.tileLayer('https://{s}.tile.jawg.io/jawg-streets/{z}/{x}/{y}{r}.png?access-token={accessToken}', {
-                attribution: '<a href="http://jawg.io" title="Tiles Courtesy of Jawg Maps" target="_blank">&copy; <b>Jawg</b>Maps</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-                minZoom: 2,
-                maxZoom: 22,
-                subdomains: 'abcd',
-                accessToken: 'ewBj0uIbEw1tVKCJkrhA8KAd7i4OFNRxWozoQnGyE6YOd9dvmh4Ft2vuaXZqRiUW'
+                maxZoom: 18
             });
             
-            layerControl.addBaseLayer(osmLayers, "OSM Map");
+            var osmLayers = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                minZoom: 2,
+                maxZoom: 19
+            }).addTo(map);
+            
+            var mapTilesLayers = L.tileLayer('https://maptiles.p.rapidapi.com/es/map/v1/{z}/{x}/{y}.png?rapidapi-key={apikey}', {
+                attribution: '&copy; <a href="http://www.maptilesapi.com/">MapTiles API</a>, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                apikey: 'b179a91a9fmsh51433d8c69e4926p19e631jsnff38d07b83d0',
+                minZoom: 2,
+                maxZoom: 20
+            });
+            
+            var jawgStreetsLayers = L.tileLayer('https://tile.jawg.io/1fc15640-0c52-4fc8-9652-442422f37293/{z}/{x}/{y}{r}.png?access-token={accessToken}', {
+                attribution: '<a href=\"https://www.jawg.io\" target=\"_blank\">&copy; Jawg</a> - <a href=\"https://www.openstreetmap.org\" target=\"_blank\">&copy; OpenStreetMap</a>&nbsp;contributors',
+                accessToken: 'ewBj0uIbEw1tVKCJkrhA8KAd7i4OFNRxWozoQnGyE6YOd9dvmh4Ft2vuaXZqRiUW',
+                minZoom: 2,
+                maxZoom: 22
+            });
+            
+            layerControl.addBaseLayer(esriWorldImageryLayers, "ESRI World Imagery");
+            layerControl.addBaseLayer(osmLayers, "Open Street Map");
+            layerControl.addBaseLayer(mapTilesLayers, "Map Tiles API");
             layerControl.addBaseLayer(jawgStreetsLayers, "Jawg Streets");
             
             function addLayers(live = false) {
                 if ( live ) {
                     layerControl.addOverlay(livePos, "Tu posici&oacute;n actual");
-                    // livePos.addTo(map);
                 }
                 layerControl.addOverlay(pointsGroup, "Puntos de usuarios");
                 pointsGroup.addTo(map);
                 layerControl.addOverlay(clickMarker, "Nuevo punto");
                 clickMarker.addTo(map).dragging.enable();
                 layerControl.expand();
+            }
+            
+            function infoToggle() {
+                info.hidden = !info.hidden;
+                info.style['z-index'] = info.style['z-index'] * -1;
             }
             
             const geoOk = (pos) => {
@@ -131,11 +218,16 @@
                     livePos.setLatLng(liveLatLng);
                     livePos.addEventListener('click',(e)=>{
                         if (debugging) console.log("LIVE CLICK:\n",e);
-                        map.flyTo(liveLatLng, 20);
+                        map.flyTo(liveLatLng, 18);
                     });
                     clickMarker.setLatLng(liveLatLng);
                     addLayers(true);
-                    setTimeout(()=>{map.setView(liveLatLng, 12)},500);
+                    setTimeout(()=>{
+                        map.setView(liveLatLng, 12);
+                        loading.hidden = true;
+                        infoToggle();
+                        livePos.addTo(map);
+                    },500);
                 } else {
                     liveLatLng.lat = pos.coords.latitude;
                     liveLatLng.lng = pos.coords.longitude;
@@ -145,7 +237,11 @@
             const geoErr = (err) => {
                 console.error(err);
                 if ( liveLatLng === undefined ) {
-                    setTimeout(()=>{map.setView(defaultLatLng, 12)},500);
+                    setTimeout(()=>{
+                        map.setView(defaultLatLng, 12);
+                        loading.hidden = true;
+                        infoToggle();
+                    },500);
                     addLayers(false);
                 }
             };
@@ -170,11 +266,17 @@
             liveUpdateID = requestAnimationFrame(liveUpdate);
             
             function sendForm() {
-                // if ( socket.readyState > 1 ) socket = new WebSocket(WS_ADDRESS);
-                socket.send(JSON.stringify(["addPoint",`${document.getElementById("pointName").value},${clickMarker.getLatLng().lat},${clickMarker.getLatLng().lng},${document.getElementById("pointNationality").value}\n`]));
-                clickPopup = addPointBtn;
-                clickMarker.togglePopup()
-                clickMarker.setPopupContent(clickPopup);
+                loading.hidden = false;
+                try {
+                    socket.send(JSON.stringify(["addPoint",`${document.getElementById("pointName").value},${clickMarker.getLatLng().lat},${clickMarker.getLatLng().lng},${document.getElementById("pointNationality").value}\n`]));
+                    clickPopup = addPointBtn;
+                    clickMarker.togglePopup()
+                    clickMarker.setPopupContent(clickPopup);
+                    loading.hidden = true;
+                } catch(err) {
+                    if ( debugging ) console.error(err);
+                    setTimeout(sendForm,1000);
+                }
             }
             
             addPointForm.id = "addPointForm";
