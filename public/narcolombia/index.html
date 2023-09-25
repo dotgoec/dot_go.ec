@@ -67,7 +67,7 @@
                 display: flex;
                 margin: 0 auto;
                 max-width: max-content;
-                font-size: 0.8em;
+                font-size: 0.83em;
             }
             #loading {
                 background-color: #66666666;
@@ -90,10 +90,12 @@
         <div id="info" style="z-index: -10;" hidden>
             <div id="infoText">
                 <hr />
-                <h1>En cualquier parte de Guayaquil roban?</h1>
-                <h2>Cartograf&iacute;as de robos urbanos en Guayaquil</h2>
+                <h1 style="font-style: italic;">Mirarnos en el espejo de NarColombia</h1>
                 <hr />
-                <h3>Instrucciones de la muestra</h3>
+                <h2>En cualquier parte de Guayaquil roban?</h2>
+                <h3>Cartograf&iacute;as de robos urbanos en Guayaquil</h3>
+                <hr />
+                <h4>Instrucciones de la muestra</h4>
                 <ol type="1">
                     <li>Busca la direcci&oacute;n del sitio donde te han robado (si fue un bus o taxi, puedes poner un punto de referencia)</li>
                     <li>Con el pin azul, a&ntilde;ade el punto con los datos que te solicitan (puedes arrastrar el pin azul o solo tocar o dar click en el mapa para moverlo)</li>
@@ -275,9 +277,11 @@
                 try {
                     socket.send(JSON.stringify(["addPoint",`${document.getElementById("pointName").value},${clickMarker.getLatLng().lat},${clickMarker.getLatLng().lng},${document.getElementById("pointNationality").value}\n`]));
                     clickPopup = addPointBtn;
-                    clickMarker.togglePopup()
+                    clickMarker.closePopup();
                     clickMarker.setPopupContent(clickPopup);
                     loading.hidden = true;
+                    if ( liveLatLng === undefined ) clickMarker.setLatLng(defaultLatLng);
+                    else clickMarker.setLatLng(liveLatLng);
                 } catch(err) {
                     if ( debugging ) console.error(err);
                     setTimeout(sendForm,1000);
