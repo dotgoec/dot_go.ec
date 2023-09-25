@@ -49,21 +49,23 @@
             #infoText {
                 background-color: #000000cc;
                 width: 100%;
-                margin: auto 0 auto 0;
+                margin: auto 0;
+                padding: 0 1em;
                 vertical-align: middle;
                 text-align: center;
                 color: #fff;
             }
-            #infoText ol {
+            #infoText > ol {
                 /* list-style-position: inside; */
                 text-align: left;
-                padding: 0 20% 0 20%;
-                width: 60%;
+                margin: 0 auto;
+                padding: 0 10%;
+                max-width: max-content;
             }
-            #infoText span {
+            #infoText > span {
                 display: flex;
-                padding: 0 10% 0 10%;
-                width: 80%;
+                margin: 0 auto;
+                max-width: max-content;
                 font-size: 0.8em;
             }
             #loading {
