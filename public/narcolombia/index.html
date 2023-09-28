@@ -12,6 +12,12 @@ Mirarnos en el espejo de NarColombia" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+        <link rel="stylesheet" href="https://maps.locationiq.com/v2/libs/leaflet-geocoder/1.9.6/leaflet-geocoder-locationiq.min.css">
+        <script src="https://maps.locationiq.com/v2/libs/leaflet-geocoder/1.9.6/leaflet-geocoder-locationiq.min.js"></script>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@drustack/leaflet.resetview/dist/L.Control.ResetView.min.css">
+        <script src="https://cdn.jsdelivr.net/npm/@drustack/leaflet.resetview/dist/L.Control.ResetView.min.js"></script>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.css">
+        <script src="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.js"></script>
         <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js" crossorigin=""></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/nosleep/0.12.0/NoSleep.min.js" integrity="sha512-DSzvYfxJWRi3E6vfcGQfL5CqOlApxYrrdqRP3hRCnoiZ0oM6+ccYjbtdzQFUrAOI/ehKk0VKFuKs5GseGPkVjQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
         <style>
@@ -90,6 +96,10 @@ Mirarnos en el espejo de NarColombia" />
     </head>
     <body>
         <div id="map"></div>
+        <!-- For the search box -->
+        <div id="search-box"></div>
+        <!-- To display the result -->
+        <div id="result"></div>
         <div id="info" style="z-index: -10;" hidden>
             <div id="infoText">
                 <hr />
@@ -103,9 +113,10 @@ Mirarnos en el espejo de NarColombia" />
                 <span id="instructions">
                     <h4>Instrucciones de la muestra</h4>
                     <ol type="1">
-                        <li>Busca la direcci&oacute;n del sitio donde te han robado (si fue un bus o taxi, puedes poner un punto de referencia)</li>
+                        <li>Busca un lugar de referencia del sitio donde te han robado (centro comercial, hospital, parque, etc)</li>
                         <li>Con el pin azul, a&ntilde;ade el punto con los datos que te solicitan (puedes arrastrar el pin azul o solo tocar o dar click en el mapa para moverlo)</li>
                         <li>Dale click a "A&ntilde;adir Punto" una vez hayas llenado los datos*</li>
+                        <li>Despu&eacute;s de colocar el punto, puedes decidir si contar tu experiencia o no en el micr&oacute;fono.</li>
                         <li>Puedes observar los otros puntos y los nombres de las dem&aacute;s personas</li>
                     </ol><br />
                     <span class="asterisk">*&nbsp;Puedes colocar tu nombre y apellido, o simplemente poner "an&oacute;nimo" si tienes miedo, preocupaci&oacute;n o no quieres usar tu nombre.</span><br />
@@ -126,6 +137,7 @@ Mirarnos en el espejo de NarColombia" />
             var socket = new WebSocket(WS_ADDRESS);
             const defaultLatLng = new L.LatLng(-2.192029, -79.880256), addPointBtn = "<button id='pointbtn' onclick='addPoint()'>A&ntilde;adir Punto</button>";
             var map = L.map('map').fitWorld(), scale = L.control.scale().addTo(map), clickPopup = addPointBtn, addPointForm = document.createElement('form');
+            map.zoomControl.setPosition('bottomright');
             var liveLatLng, livePos = L.circle(defaultLatLng, {
                 color: '#333',
                 fillColor: '#666',
@@ -143,6 +155,21 @@ Mirarnos en el espejo de NarColombia" />
                 shadowAnchor: [13, 34]
             });
             var points = [], pointsGroup = L.layerGroup(), layerControl = L.control.layers().addTo(map);
+            var geocoder = L.control.geocoder('pk.c2496aa6035c8e2af4d1722c1a87a9f2',{
+                params: {
+                    countrycodes: 'EC'
+                },
+                focus: true,
+                markers: false,
+                placeholder: "Buscar tu punto de referencia",
+                expanded: true,
+                panToPoint: true
+            }).addTo(map);
+            geocoder._reset.innerHTML = "&#8676;";
+            var infoMapBtn = L.easyButton('&#9776;',(b,m) => {
+                if ( debugging ) console.log(b,m);
+                infoToggle();
+            }).addTo(map).setPosition('topleft');
             
             const onMessage = (event) => {
                 let msg;
@@ -160,7 +187,7 @@ Mirarnos en el espejo de NarColombia" />
                             if (debugging) console.log(p);
                             if ( p.length === 4 ) {
                                 if ( !isNaN(p[1]) && !isNaN(p[2]) ) {
-                                    const pi = points.push(L.marker([p[1],p[2]],{icon: redIcon}).bindPopup(`<a class=\"pbutton\" href=\"javascript:map.flyTo(new L.LatLng(${p[1]},${p[2]}), 18)\"><button><span class=\"pname\">${p[0]}</span><br /><span class=\"pnationality\">${p[3]}</span></button></a>`)) - 1;
+                                    const pi = points.push(L.marker([p[1],p[2]],{icon: redIcon}).bindPopup(`<a class=\"pbutton\" href=\"javascript:map.flyTo(new L.LatLng(${p[1]},${p[2]}), 20)\"><button><span class=\"pname\">${p[0]}</span><br /><span class=\"pnationality\">${p[3]}</span></button></a>`)) - 1;
                                     points[pi].addTo(pointsGroup);
                                 }
                             }
@@ -223,6 +250,17 @@ Mirarnos en el espejo de NarColombia" />
                 layerControl.addOverlay(clickMarker, "Nuevo punto");
                 clickMarker.addTo(map).dragging.enable();
                 layerControl.expand();
+                geocoder.on('select', (e) => {
+                  if ( debugging ) console.log(e);
+                  map.flyTo(e.latlng, 18);
+                  clickMarker.setLatLng(e.latlng);
+                });
+                L.control.resetView({
+                    position: "topleft",
+                    title: "Reset view",
+                    latlng: live ? liveLatLng : defaultLatLng,
+                    zoom: 12,
+                }).addTo(map);
             }
             
             function infoToggle() {
