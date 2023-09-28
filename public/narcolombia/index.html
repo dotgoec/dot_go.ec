@@ -24,6 +24,7 @@ Mirarnos en el espejo de NarColombia" />
             body {
                 padding: 0;
                 margin: 0;
+                overflow: hidden;
             }
             html, body, #map {
                 height: 100%;
@@ -54,11 +55,12 @@ Mirarnos en el espejo de NarColombia" />
                 background-color: #000000cc;
                 display: flex;
                 font-family: system-ui;
+                width: 100vw;
+                max-height: 100vh;
+                overflow: auto;
             }
             #infoText {
                 background-color: #000000cc;
-                width: 100%;
-                max-height: 100%;
                 margin: auto 0;
                 padding: 1em;
                 vertical-align: middle;
