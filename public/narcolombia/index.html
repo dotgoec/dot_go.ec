@@ -134,7 +134,7 @@ Mirarnos en el espejo de NarColombia" />
         </div>
         <div id="loading"><img id="loadgif" src='../DotGoLoadDark.gif' /></div>
         <script>
-            var debugging = false;
+            var debugging = false, init = false;
             if ( location.hash.search('debug') > -1 ) debugging = true;
             const noSleep = new NoSleep();
             var info = document.getElementById('info');
@@ -187,6 +187,7 @@ Mirarnos en el espejo de NarColombia" />
             }).addTo(map).setPosition('topleft');
             
             const onMessage = (event) => {
+                if ( debugging ) console.log("MSG:\n",event);
                 let msg;
                 try{
                     msg = JSON.parse(event.data);
@@ -215,71 +216,82 @@ Mirarnos en el espejo de NarColombia" />
             
             const onOpen = (e) => {
                 if (debugging) console.log("CONNECTED\n",e);
+                if ( !init ) {
+                    cookieStore.getAll().then((res)=>{
+                        // "use strict";
+                        if ( debugging ) console.log('COOKIES:\n',res);
+                        
+                        let cookies = {};
+                        for ( let r of res ) {
+                            if ( r.name.search("ID") > -1 ) socket.id = r.value;
+                            else cookies[r.name] = r.value;
+                        }
+                    
+                        esriWorldImageryLayers = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+                            minZoom: 2,
+                            maxZoom: 18
+                        });
+                        
+                        osmLayers = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                            minZoom: 2,
+                            maxZoom: 19
+                        }).addTo(map);
+                        /*
+                        mapTilesLayers = L.tileLayer('https://maptiles.p.rapidapi.com/es/map/v1/{z}/{x}/{y}.png?rapidapi-key={apikey}', {
+                            attribution: '&copy; <a href="http://www.maptilesapi.com/">MapTiles API</a>, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                            apikey: cookies['mapTilesKey'],
+                            minZoom: 2,
+                            maxZoom: 20
+                        });
+                        */
+                        stadiaOutdoorsLayers = L.tileLayer('https://tiles.stadiamaps.com/tiles/outdoors/{z}/{x}/{y}{r}.png', {
+                            attribution: '&copy; <a href="https://stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/about" target="_blank">OpenStreetMap</a> contributors',
+                            minZoom: 2,
+                            maxZoom: 20,
+                        });
+                        
+                        jawgStreetsLayers = L.tileLayer('https://tile.jawg.io/1fc15640-0c52-4fc8-9652-442422f37293/{z}/{x}/{y}{r}.png?access-token={accessToken}', {
+                            attribution: '<a href=\"https://www.jawg.io\" target=\"_blank\">&copy; Jawg</a> - <a href=\"https://www.openstreetmap.org\" target=\"_blank\">&copy; OpenStreetMap</a>&nbsp;contributors',
+                            accessToken: cookies['jawgKey'],
+                            minZoom: 2,
+                            maxZoom: 22
+                        });
+                        
+                        mapTilerStreetsLayers = L.maplibreGL({
+                            style: `https://api.maptiler.com/maps/streets-v2/style.json?key=${cookies['mapTilerKey']}`,
+                            attribution: '<a href=\"https://maptiler.com/\" target=\"_blank\">&copy; MapTiler</a>'
+                        });
+                        
+                        stadiaAlidadeSatelliteLayers = L.maplibreGL({
+                            style: `https://tiles.stadiamaps.com/styles/alidade_satellite.json?api_key=${cookies['stadiaKey']}`,
+                            attribution: '&copy; CNES, Distribution Airbus DS, &copy; Airbus DS, &copy; PlanetObserver (Contains Copernicus Data)'
+                        });
+                        
+                        mapTilerSatelliteLayers = L.maplibreGL({
+                            style: `https://api.maptiler.com/maps/satellite/style.json?key=${cookies['mapTilerKey']}`,
+                            attribution: '<a href=\"https://maptiler.com/\" target=\"_blank\">&copy; MapTiler</a>'
+                        });
+                    
+                        layerControl.addBaseLayer(esriWorldImageryLayers, "ESRI World Imagery");
+                        layerControl.addBaseLayer(osmLayers, "Open Street Map");
+                        // layerControl.addBaseLayer(mapTilesLayers, "Map Tiles API");
+                        layerControl.addBaseLayer(stadiaOutdoorsLayers, "Stadia Outdoors");
+                        layerControl.addBaseLayer(jawgStreetsLayers, "Jawg Streets");
+                        layerControl.addBaseLayer(mapTilerStreetsLayers, "MapTiler Streets");
+                        layerControl.addBaseLayer(stadiaAlidadeSatelliteLayers, "Stadia Alidade Satellite");
+                        layerControl.addBaseLayer(mapTilerSatelliteLayers, "MapTiler Satellite");
+                        
+                        init = true;
+                    });
+                } else loading.hidden = true;
             };
             
             const onClose = (e) => {
-                if (debugging) console.log("CONNECTED\n",e);
+                if (debugging) console.log("DISCONNECTED\n",e);
+                loading.hidden = false;
             };
-            
-            socket.addEventListener('message', onMessage);
-            socket.addEventListener('open', onOpen);
-            socket.addEventListener('close', onClose);
-            
-            var esriWorldImageryLayers = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-                attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
-                minZoom: 2,
-                maxZoom: 18
-            });
-            
-            var osmLayers = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-                minZoom: 2,
-                maxZoom: 19
-            }).addTo(map);
-            /*
-            var mapTilesLayers = L.tileLayer('https://maptiles.p.rapidapi.com/es/map/v1/{z}/{x}/{y}.png?rapidapi-key={apikey}', {
-                attribution: '&copy; <a href="http://www.maptilesapi.com/">MapTiles API</a>, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-                apikey: 'b179a91a9fmsh51433d8c69e4926p19e631jsnff38d07b83d0',
-                minZoom: 2,
-                maxZoom: 20
-            });
-            */
-            var stadiaOutdoorsLayers = L.tileLayer('https://tiles.stadiamaps.com/tiles/outdoors/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; <a href="https://stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/about" target="_blank">OpenStreetMap</a> contributors',
-                minZoom: 2,
-                maxZoom: 20,
-            });
-            
-            var jawgStreetsLayers = L.tileLayer('https://tile.jawg.io/1fc15640-0c52-4fc8-9652-442422f37293/{z}/{x}/{y}{r}.png?access-token={accessToken}', {
-                attribution: '<a href=\"https://www.jawg.io\" target=\"_blank\">&copy; Jawg</a> - <a href=\"https://www.openstreetmap.org\" target=\"_blank\">&copy; OpenStreetMap</a>&nbsp;contributors',
-                accessToken: 'ewBj0uIbEw1tVKCJkrhA8KAd7i4OFNRxWozoQnGyE6YOd9dvmh4Ft2vuaXZqRiUW',
-                minZoom: 2,
-                maxZoom: 22
-            });
-            
-            var mapTilerStreetsLayers = L.maplibreGL({
-                style: 'https://api.maptiler.com/maps/streets-v2/style.json?key=IeRw7nSO2sYSDWZmlDG4',
-                attribution: '<a href=\"https://maptiler.com/\" target=\"_blank\">&copy; MapTiler</a>'
-            });
-            
-            var stadiaAlidadeSatelliteLayers = L.maplibreGL({
-                style: 'https://tiles.stadiamaps.com/styles/alidade_satellite.json?api_key=e9d1f98a-2191-4a2a-8e7d-bff41ab919e6'
-                attribution: '&copy; CNES, Distribution Airbus DS, &copy; Airbus DS, &copy; PlanetObserver (Contains Copernicus Data)'
-            });
-            
-            var mapTilerSatelliteLayers = L.maplibreGL({
-                style: 'https://api.maptiler.com/maps/satellite/style.json?key=IeRw7nSO2sYSDWZmlDG4',
-                attribution: '<a href=\"https://maptiler.com/\" target=\"_blank\">&copy; MapTiler</a>'
-            });
-            
-            layerControl.addBaseLayer(esriWorldImageryLayers, "ESRI World Imagery");
-            layerControl.addBaseLayer(osmLayers, "Open Street Map");
-            // layerControl.addBaseLayer(mapTilesLayers, "Map Tiles API");
-            layerControl.addBaseLayer(stadiaOutdoorsLayers, "Stadia Outdoors");
-            layerControl.addBaseLayer(jawgStreetsLayers, "Jawg Streets");
-            layerControl.addBaseLayer(mapTilerStreetsLayers, "MapTiler Streets");
-            layerControl.addBaseLayer(stadiaAlidadeSatelliteLayers, "Stadia Alidade Satellite");
-            layerControl.addBaseLayer(mapTilerSatelliteLayers, "MapTiler Satellite");
             
             function addLayers(live = false) {
                 if ( live ) {
@@ -339,26 +351,6 @@ Mirarnos en el espejo de NarColombia" />
                 }
             };
             
-            livePosID = navigator.geolocation.watchPosition(geoOk,geoErr);
-            
-            liveUpdate = () => {
-                if ( liveLatLng != undefined ) livePos.setLatLng(liveLatLng);
-                if ( socket.readyState === 3 ) {
-                    if (debugging) console.log("DISCONNECTED.\nRELOADING...");
-                    socket = new WebSocket(WS_ADDRESS);
-                    socket.addEventListener('message', onMessage);
-                    socket.addEventListener('open', onOpen);
-                    socket.addEventListener('close', onClose);
-                    socket.addEventListener('error', (err) => {
-                        console.error('Socket encountered error: ', err.message, 'Closing socket');
-                        socket.close();
-                    });
-                }
-                liveUpdateID = requestAnimationFrame(liveUpdate);
-            };
-            
-            liveUpdateID = requestAnimationFrame(liveUpdate);
-            
             function sendForm() {
                 loading.hidden = false;
                 try {
@@ -375,15 +367,6 @@ Mirarnos en el espejo de NarColombia" />
                 }
             }
             
-            addPointForm.id = "addPointForm";
-            addPointForm.action = '';
-            addPointForm.innerHTML = `
-                <label for=\"name\">Nombre: </label><br />
-                <input type=\"text\" name=\"Name\" id=\"pointName\" placeholder=\"Nombre o An&oacute;nimo\" required /><br />
-                <label for=\"nationality\">Nacionalidad: </label><br />
-                <input type=\"text\" name=\"Nationality\" id=\"pointNationality\" placeholder=\"Ciudad o pa&iacute;s\" required /><br />
-                <input type=\"submit\" id=\"pointSubmit\" value=\"A&ntilde;adir Punto\" formaction=\"javascript:sendForm()\"/>`
-            
             function addPoint() {
                 if (debugging) console.log("Punto");
                 clickPopup = addPointForm;
@@ -397,6 +380,41 @@ Mirarnos en el espejo de NarColombia" />
                     clickMarker.setPopupContent(clickPopup).openPopup().dragging.enable();
                 }
             }
+            
+            let esriWorldImageryLayers, osmLayers, mapTilesLayers, stadiaOutdoorsLayers, jawgStreetsLayers, mapTilerStreetsLayers, stadiaAlidadeSatelliteLayers, mapTilerSatelliteLayers;
+            
+            addPointForm.id = "addPointForm";
+            addPointForm.action = '';
+            addPointForm.innerHTML = `
+                <label for=\"name\">Nombre: </label><br />
+                <input type=\"text\" name=\"Name\" id=\"pointName\" placeholder=\"Nombre o An&oacute;nimo\" required /><br />
+                <label for=\"nationality\">Nacionalidad: </label><br />
+                <input type=\"text\" name=\"Nationality\" id=\"pointNationality\" placeholder=\"Ciudad o pa&iacute;s\" required /><br />
+                <input type=\"submit\" id=\"pointSubmit\" value=\"A&ntilde;adir Punto\" formaction=\"javascript:sendForm()\"/>`
+            
+            socket.addEventListener('message', onMessage);
+            socket.addEventListener('open', onOpen);
+            socket.addEventListener('close', onClose);
+            
+            livePosID = navigator.geolocation.watchPosition(geoOk,geoErr);
+            
+            liveUpdate = (f) => {
+                if ( liveLatLng != undefined ) livePos.setLatLng(liveLatLng);
+                if ( socket.readyState === 3 ) {
+                    if (debugging) console.log("DISCONNECTED.\nRELOADING...");
+                    socket = new WebSocket(WS_ADDRESS);
+                    socket.addEventListener('message', onMessage);
+                    socket.addEventListener('open', onOpen);
+                    socket.addEventListener('close', onClose);
+                    socket.addEventListener('error', (err) => {
+                        console.error('Socket encountered error: ', err.message, 'Closing socket');
+                        socket.close();
+                    });
+                }
+                liveUpdateID = requestAnimationFrame(liveUpdate);
+            };
+            
+            liveUpdateID = requestAnimationFrame(liveUpdate);
             
             map.on('click', onMapClick);
         </script>
