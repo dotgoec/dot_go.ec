@@ -142,7 +142,11 @@ Mirarnos en el espejo de NarColombia" />
             const WS_ADDRESS = "wss://dotgoec.alwaysdata.net/ws";
             var socket = new WebSocket(WS_ADDRESS);
             const defaultLatLng = new L.LatLng(-2.192029, -79.880256), centeredLatLng = new L.LatLng(-2.1579002, -79.9088502), addPointBtn = "<form><input type=\"submit\" id=\"pointSubmit\" value=\"A&ntilde;adir Punto\" formaction=\"javascript:addPoint()\"/></form>";
-            var map = L.map('map').fitWorld(), scale = L.control.scale().addTo(map), clickPopup = addPointBtn, addPointForm = document.createElement('form');
+            var map = L.map('map',{
+                preferCanvas: true,
+                worldCopyJump: true
+            }).fitWorld();
+            var scale = L.control.scale().addTo(map), clickPopup = addPointBtn, addPointForm = document.createElement('form');
             map.zoomControl.setPosition('bottomright');
             var liveLatLng, livePos = L.circle(defaultLatLng, {
                 color: '#333',
@@ -246,10 +250,6 @@ Mirarnos en el espejo de NarColombia" />
                 maxZoom: 20,
             });
             
-            var stadiaAlidadeSatelliteLayers = L.maplibreGL({
-                style: 'https://tiles.stadiamaps.com/styles/alidade_satellite.json?api_key=e9d1f98a-2191-4a2a-8e7d-bff41ab919e6'
-            });
-            
             var jawgStreetsLayers = L.tileLayer('https://tile.jawg.io/1fc15640-0c52-4fc8-9652-442422f37293/{z}/{x}/{y}{r}.png?access-token={accessToken}', {
                 attribution: '<a href=\"https://www.jawg.io\" target=\"_blank\">&copy; Jawg</a> - <a href=\"https://www.openstreetmap.org\" target=\"_blank\">&copy; OpenStreetMap</a>&nbsp;contributors',
                 accessToken: 'ewBj0uIbEw1tVKCJkrhA8KAd7i4OFNRxWozoQnGyE6YOd9dvmh4Ft2vuaXZqRiUW',
@@ -257,12 +257,29 @@ Mirarnos en el espejo de NarColombia" />
                 maxZoom: 22
             });
             
+            var mapTilerStreetsLayers = L.maplibreGL({
+                style: 'https://api.maptiler.com/maps/streets-v2/style.json?key=IeRw7nSO2sYSDWZmlDG4',
+                attribution: '<a href=\"https://maptiler.com/\" target=\"_blank\">&copy; MapTiler</a>'
+            });
+            
+            var stadiaAlidadeSatelliteLayers = L.maplibreGL({
+                style: 'https://tiles.stadiamaps.com/styles/alidade_satellite.json?api_key=e9d1f98a-2191-4a2a-8e7d-bff41ab919e6'
+                attribution: '&copy; CNES, Distribution Airbus DS, &copy; Airbus DS, &copy; PlanetObserver (Contains Copernicus Data)'
+            });
+            
+            var mapTilerSatelliteLayers = L.maplibreGL({
+                style: 'https://api.maptiler.com/maps/satellite/style.json?key=IeRw7nSO2sYSDWZmlDG4',
+                attribution: '<a href=\"https://maptiler.com/\" target=\"_blank\">&copy; MapTiler</a>'
+            });
+            
             layerControl.addBaseLayer(esriWorldImageryLayers, "ESRI World Imagery");
             layerControl.addBaseLayer(osmLayers, "Open Street Map");
             // layerControl.addBaseLayer(mapTilesLayers, "Map Tiles API");
             layerControl.addBaseLayer(stadiaOutdoorsLayers, "Stadia Outdoors");
             layerControl.addBaseLayer(jawgStreetsLayers, "Jawg Streets");
+            layerControl.addBaseLayer(mapTilerStreetsLayers, "MapTiler Streets");
             layerControl.addBaseLayer(stadiaAlidadeSatelliteLayers, "Stadia Alidade Satellite");
+            layerControl.addBaseLayer(mapTilerSatelliteLayers, "MapTiler Satellite");
             
             function addLayers(live = false) {
                 if ( live ) {
