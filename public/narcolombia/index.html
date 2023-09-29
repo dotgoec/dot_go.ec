@@ -10,14 +10,18 @@ Mirarnos en el espejo de NarColombia" />
         <meta property='og:image:width' content='400' />
         <meta property='og:image:height' content='400' />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+        <!-- Leaflet -->
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+        <!-- Leaflet plugins -->
         <link rel="stylesheet" href="https://maps.locationiq.com/v2/libs/leaflet-geocoder/1.9.6/leaflet-geocoder-locationiq.min.css">
         <script src="https://maps.locationiq.com/v2/libs/leaflet-geocoder/1.9.6/leaflet-geocoder-locationiq.min.js"></script>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@drustack/leaflet.resetview/dist/L.Control.ResetView.min.css">
-        <script src="https://cdn.jsdelivr.net/npm/@drustack/leaflet.resetview/dist/L.Control.ResetView.min.js"></script>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.css">
         <script src="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.js"></script>
+        <link href="https://unpkg.com/maplibre-gl@3.2.1/dist/maplibre-gl.css" rel='stylesheet' />
+        <script src="https://unpkg.com/maplibre-gl@3.2.1/dist/maplibre-gl.js"></script>
+        <script src="https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.0.19/leaflet-maplibre-gl.js"></script>
+        <!-- Other js utilities -->
         <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js" crossorigin=""></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/nosleep/0.12.0/NoSleep.min.js" integrity="sha512-DSzvYfxJWRi3E6vfcGQfL5CqOlApxYrrdqRP3hRCnoiZ0oM6+ccYjbtdzQFUrAOI/ehKk0VKFuKs5GseGPkVjQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
         <style>
@@ -49,19 +53,17 @@ Mirarnos en el espejo de NarColombia" />
                 padding: 0;
                 margin: 0;
                 width: 100vw;
-                height: 100vh;
+                height: 100%;
             }
             #info {
                 background-color: #000000cc;
                 display: flex;
                 font-family: system-ui;
-                width: 100vw;
-                max-height: 100vh;
                 overflow: auto;
             }
             #infoText {
                 background-color: #000000cc;
-                margin: auto 0;
+                margin: auto;
                 padding: 1em;
                 vertical-align: middle;
                 text-align: center;
@@ -91,6 +93,10 @@ Mirarnos en el espejo de NarColombia" />
                 top: 50%;
                 left: 50%;
             }
+            .button-state {
+                font-size: 1.5em;
+                text-align: center;
+            }
             [hidden] {
                 display: none !important;
             }
@@ -98,9 +104,7 @@ Mirarnos en el espejo de NarColombia" />
     </head>
     <body>
         <div id="map"></div>
-        <!-- For the search box -->
         <div id="search-box"></div>
-        <!-- To display the result -->
         <div id="result"></div>
         <div id="info" style="z-index: -10;" hidden>
             <div id="infoText">
@@ -137,14 +141,14 @@ Mirarnos en el espejo de NarColombia" />
             var loading = document.getElementById('loading');
             const WS_ADDRESS = "wss://dotgoec.alwaysdata.net/ws";
             var socket = new WebSocket(WS_ADDRESS);
-            const defaultLatLng = new L.LatLng(-2.192029, -79.880256), addPointBtn = "<button id='pointbtn' onclick='addPoint()'>A&ntilde;adir Punto</button>";
+            const defaultLatLng = new L.LatLng(-2.192029, -79.880256), centeredLatLng = new L.LatLng(-2.1579002, -79.9088502), addPointBtn = "<form><input type=\"submit\" id=\"pointSubmit\" value=\"A&ntilde;adir Punto\" formaction=\"javascript:addPoint()\"/></form>";
             var map = L.map('map').fitWorld(), scale = L.control.scale().addTo(map), clickPopup = addPointBtn, addPointForm = document.createElement('form');
             map.zoomControl.setPosition('bottomright');
             var liveLatLng, livePos = L.circle(defaultLatLng, {
                 color: '#333',
                 fillColor: '#666',
                 fillOpacity: 0.3,
-                radius: 100
+                radius: 0
             }), livePosID;
             var liveUpdateID, liveUpdate;
             var clickMarker = L.marker(defaultLatLng).bindPopup(clickPopup), redIcon = L.icon({
@@ -165,12 +169,17 @@ Mirarnos en el espejo de NarColombia" />
                 markers: false,
                 placeholder: "Buscar tu punto de referencia",
                 expanded: true,
-                panToPoint: true
+                panToPoint: true,
+                fullWidth: false
             }).addTo(map);
-            geocoder._reset.innerHTML = "&#8676;";
+            geocoder._reset.innerHTML = "<b>&#8676;</b>";
             var infoMapBtn = L.easyButton('&#9776;',(b,m) => {
                 if ( debugging ) console.log(b,m);
                 infoToggle();
+            }).addTo(map).setPosition('topleft');
+            var resetViewBtn = L.easyButton('<b>&#8634;&nbsp;</b>',(b,m) => {
+                if ( debugging ) console.log(b,m);
+                map.flyTo( ( livePos.getRadius() > 0 ) ? liveLatLng : centeredLatLng, 12);
             }).addTo(map).setPosition('topleft');
             
             const onMessage = (event) => {
@@ -187,9 +196,9 @@ Mirarnos en el espejo de NarColombia" />
                         for ( i = 0; i < msg[1].length; i++ ) {
                             const p = msg[1][i].split(',');
                             if (debugging) console.log(p);
-                            if ( p.length === 4 ) {
+                            if ( p.length === 5 ) {
                                 if ( !isNaN(p[1]) && !isNaN(p[2]) ) {
-                                    const pi = points.push(L.marker([p[1],p[2]],{icon: redIcon}).bindPopup(`<a class=\"pbutton\" href=\"javascript:map.flyTo(new L.LatLng(${p[1]},${p[2]}), 20)\"><button><span class=\"pname\">${p[0]}</span><br /><span class=\"pnationality\">${p[3]}</span></button></a>`)) - 1;
+                                const pi = points.push(L.marker([p[1],p[2]],{icon: redIcon}).bindPopup(`<form><button class=\"pbutton\" onclick=\"javascript:map.flyTo(new L.LatLng(${p[1]},${p[2]}), 18)\"><span class=\"pname\">${p[0]}</span><br /><span class=\"pnationality\">${p[3]}</span></button>${ p[4] != ' ' ? '<br><a href=\"'+p[4]+'\" target=\"_blank\"><button class=\"purl\">Nota de voz</button></a>' : '' }</form>`)) - 1;
                                     points[pi].addTo(pointsGroup);
                                 }
                             }
@@ -223,12 +232,22 @@ Mirarnos en el espejo de NarColombia" />
                 minZoom: 2,
                 maxZoom: 19
             }).addTo(map);
-            
+            /*
             var mapTilesLayers = L.tileLayer('https://maptiles.p.rapidapi.com/es/map/v1/{z}/{x}/{y}.png?rapidapi-key={apikey}', {
                 attribution: '&copy; <a href="http://www.maptilesapi.com/">MapTiles API</a>, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
                 apikey: 'b179a91a9fmsh51433d8c69e4926p19e631jsnff38d07b83d0',
                 minZoom: 2,
                 maxZoom: 20
+            });
+            */
+            var stadiaOutdoorsLayers = L.tileLayer('https://tiles.stadiamaps.com/tiles/outdoors/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/about" target="_blank">OpenStreetMap</a> contributors',
+                minZoom: 2,
+                maxZoom: 20,
+            });
+            
+            var stadiaAlidadeSatelliteLayers = L.maplibreGL({
+                style: 'https://tiles.stadiamaps.com/styles/alidade_satellite.json?api_key=e9d1f98a-2191-4a2a-8e7d-bff41ab919e6'
             });
             
             var jawgStreetsLayers = L.tileLayer('https://tile.jawg.io/1fc15640-0c52-4fc8-9652-442422f37293/{z}/{x}/{y}{r}.png?access-token={accessToken}', {
@@ -240,8 +259,10 @@ Mirarnos en el espejo de NarColombia" />
             
             layerControl.addBaseLayer(esriWorldImageryLayers, "ESRI World Imagery");
             layerControl.addBaseLayer(osmLayers, "Open Street Map");
-            layerControl.addBaseLayer(mapTilesLayers, "Map Tiles API");
+            // layerControl.addBaseLayer(mapTilesLayers, "Map Tiles API");
+            layerControl.addBaseLayer(stadiaOutdoorsLayers, "Stadia Outdoors");
             layerControl.addBaseLayer(jawgStreetsLayers, "Jawg Streets");
+            layerControl.addBaseLayer(stadiaAlidadeSatelliteLayers, "Stadia Alidade Satellite");
             
             function addLayers(live = false) {
                 if ( live ) {
@@ -251,18 +272,12 @@ Mirarnos en el espejo de NarColombia" />
                 pointsGroup.addTo(map);
                 layerControl.addOverlay(clickMarker, "Nuevo punto");
                 clickMarker.addTo(map).dragging.enable();
-                layerControl.expand();
+                // layerControl.expand();
                 geocoder.on('select', (e) => {
                   if ( debugging ) console.log(e);
                   map.flyTo(e.latlng, 18);
                   clickMarker.setLatLng(e.latlng);
                 });
-                L.control.resetView({
-                    position: "topleft",
-                    title: "Reset view",
-                    latlng: live ? liveLatLng : defaultLatLng,
-                    zoom: 12,
-                }).addTo(map);
             }
             
             function infoToggle() {
@@ -273,7 +288,7 @@ Mirarnos en el espejo de NarColombia" />
             }
             
             const geoOk = (pos) => {
-                if (debugging) console.log(pos);
+                console.log("Live Location APPROVED:\n",pos);
                 if ( liveLatLng === undefined ) {
                     liveLatLng = new L.LatLng(pos.coords.latitude, pos.coords.longitude);
                     livePos.setLatLng(liveLatLng);
@@ -296,7 +311,7 @@ Mirarnos en el espejo de NarColombia" />
                 livePos.setRadius(pos.coords.accuracy);
             };
             const geoErr = (err) => {
-                console.error(err);
+                console.error("Live Location DENIED:\n", err);
                 if ( liveLatLng === undefined ) {
                     setTimeout(()=>{
                         map.setView(defaultLatLng, 12);
@@ -330,7 +345,7 @@ Mirarnos en el espejo de NarColombia" />
             function sendForm() {
                 loading.hidden = false;
                 try {
-                    socket.send(JSON.stringify(["addPoint",`${document.getElementById("pointName").value},${clickMarker.getLatLng().lat},${clickMarker.getLatLng().lng},${document.getElementById("pointNationality").value}\n`]));
+                    socket.send(JSON.stringify(["addPoint",`${document.getElementById("pointName").value},${clickMarker.getLatLng().lat},${clickMarker.getLatLng().lng},${document.getElementById("pointNationality").value},${" "}\n`]));
                     clickPopup = addPointBtn;
                     clickMarker.closePopup();
                     clickMarker.setPopupContent(clickPopup);
