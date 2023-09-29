@@ -10,12 +10,6 @@ const addPoint = async (p) => {
   // pwriter.unref();
   Bun.write(pointsPath,p);
 };
-const apiKeys = {
-  mapTiles: 'b179a91a9fmsh51433d8c69e4926p19e631jsnff38d07b83d0',
-  jawg: 'ewBj0uIbEw1tVKCJkrhA8KAd7i4OFNRxWozoQnGyE6YOd9dvmh4Ft2vuaXZqRiUW',
-  stadia: 'e9d1f98a-2191-4a2a-8e7d-bff41ab919e6',
-  mapTiler: 'IeRw7nSO2sYSDWZmlDG4'
-};
 const wss = Bun.serve({
     port: process.env.PORT,
     hostname: process.env.IP,
@@ -25,10 +19,10 @@ const wss = Bun.serve({
       // upgrade the request to a WebSocket
       let cookies = new Headers();
       cookies.append("Set-Cookie",`sessionID=${Math.floor(Math.random() * Date.now()).toString(16)}`);
-      cookies.append("Set-Cookie",`mapTilesKey=${apiKeys.mapTiles}`);
-      cookies.append("Set-Cookie",`jawgKey=${apiKeys.jawg}`);
-      cookies.append("Set-Cookie",`stadiaKey=${apiKeys.stadia}`);
-      cookies.append("Set-Cookie",`mapTilerKey=${apiKeys.mapTiler}`);
+      cookies.append("Set-Cookie",`mapTilesKey=${process.env.MAPTILES_KEY}`);
+      cookies.append("Set-Cookie",`jawgKey=${process.env.JAWG_KEY}`);
+      cookies.append("Set-Cookie",`stadiaKey=${process.env.STADIA_KEY}`);
+      cookies.append("Set-Cookie",`mapTilerKey=${process.env.MAPTILER_KEY}`);
       if (server.upgrade(req, {
         headers: cookies,
       })) {
