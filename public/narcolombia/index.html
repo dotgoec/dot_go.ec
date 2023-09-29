@@ -106,7 +106,7 @@ Mirarnos en el espejo de NarColombia" />
         <div id="map"></div>
         <div id="search-box"></div>
         <div id="result"></div>
-        <div id="info" style="z-index: -10;" hidden>
+        <div id="info" style="z-index: 10;">
             <div id="infoText">
                 <hr />
                 <h1 style="font-style: italic;">Mirarnos en el espejo de NarColombia</h1>
@@ -144,9 +144,10 @@ Mirarnos en el espejo de NarColombia" />
             const defaultLatLng = new L.LatLng(-2.192029, -79.880256), centeredLatLng = new L.LatLng(-2.1579002, -79.9088502), addPointBtn = "<form><input type=\"submit\" id=\"pointSubmit\" value=\"A&ntilde;adir Punto\" formaction=\"javascript:addPoint()\"/></form>";
             var map = L.map('map',{
                 preferCanvas: true,
-                worldCopyJump: true
+                worldCopyJump: true,
+                center: centeredLatLng
             }).fitWorld();
-            var scale = L.control.scale().addTo(map), clickPopup = addPointBtn, addPointForm = document.createElement('form');
+            var scale = L.control.scale().addTo(map).setPosition('bottomright'), clickPopup = addPointBtn, addPointForm = document.createElement('form');
             map.zoomControl.setPosition('bottomright');
             var liveLatLng, livePos = L.circle(defaultLatLng, {
                 color: '#333',
@@ -285,7 +286,8 @@ Mirarnos en el espejo de NarColombia" />
                         
                         init = true;
                     });
-                } else loading.hidden = true;
+                } 
+                loading.hidden = true;
             };
             
             const onClose = (e) => {
@@ -314,11 +316,13 @@ Mirarnos en el espejo de NarColombia" />
                 info.hidden = !info.hidden;
                 info.style['z-index'] = info.style['z-index'] * -1;
                 if ( info.hidden ) noSleep.enable();
+                if ( livePosID === undefined ) livePosID = navigator.geolocation.watchPosition(geoOk,geoErr);
             }
             
             const geoOk = (pos) => {
                 console.log("Live Location APPROVED:\n",pos);
                 if ( liveLatLng === undefined ) {
+                    loading.hidden = false;
                     liveLatLng = new L.LatLng(pos.coords.latitude, pos.coords.longitude);
                     livePos.setLatLng(liveLatLng);
                     livePos.addEventListener('click',(e)=>{
@@ -330,7 +334,6 @@ Mirarnos en el espejo de NarColombia" />
                     setTimeout(()=>{
                         map.setView(liveLatLng, 12);
                         loading.hidden = true;
-                        infoToggle();
                         livePos.addTo(map);
                     },500);
                 } else {
@@ -342,10 +345,10 @@ Mirarnos en el espejo de NarColombia" />
             const geoErr = (err) => {
                 console.error("Live Location DENIED:\n", err);
                 if ( liveLatLng === undefined ) {
+                    loading.hidden = false;
                     setTimeout(()=>{
                         map.setView(defaultLatLng, 12);
                         loading.hidden = true;
-                        infoToggle();
                     },500);
                     addLayers(false);
                 }
@@ -395,8 +398,6 @@ Mirarnos en el espejo de NarColombia" />
             socket.addEventListener('message', onMessage);
             socket.addEventListener('open', onOpen);
             socket.addEventListener('close', onClose);
-            
-            livePosID = navigator.geolocation.watchPosition(geoOk,geoErr);
             
             liveUpdate = (f) => {
                 if ( liveLatLng != undefined ) livePos.setLatLng(liveLatLng);
