@@ -99,11 +99,10 @@ console.log("Started!");
   // });
   
 const tBot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, {polling: true});
-console.log(tBot);
 let narColombiaVoiceNote = {};
 tBot.on('message', async (msg) => {
   const chat = msg.chat;
-  console.log("CHAT:\n",chat);
+  if (debugging) console.log("CHAT:\n",chat);
   if ( narColombiaVoiceNote[msg.from.id] === undefined ) narColombiaVoiceNote[msg.from.id] = false;
   if ( msg.text ) {
     console.log("MESSAGE: ",msg.text);
@@ -118,12 +117,12 @@ tBot.on('message', async (msg) => {
       }
   }
   if ( msg.voice ) {
-    console.log("VOICE NOTE:\n",msg.voice);
+    if (debugging) console.log("VOICE NOTE:\n",msg.voice);
     if ( narColombiaVoiceNote[msg.from.id] ) {
       tBot.sendVoice(process.env.NARCOLOMBIA_TELEGRAM_CHANNEL_ID, msg.voice.file_id);
       tBot.sendMessage(chat.id,"Gracias por contar tu experiencia!\nEl audio ha sido recibido correctamente y anadido al registro en nuestro canal publico de la muestra:\n https://t.me/narcolombia_gye2023.");
       addText(voicenotesPath, await voicenotes.text() + msg.from.id + ',' + msg.voice.file_id + '\n');
     }
   }
-  console.log(narColombiaVoiceNote);
+  if (debugging) console.log(narColombiaVoiceNote);
 });
