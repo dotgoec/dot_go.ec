@@ -35,6 +35,9 @@ Mirarnos en el espejo de NarColombia" />
                 width: 100vw;
                 z-index: 0;
             }
+            a {
+                color: cornflowerblue;
+            }
             #addPointForm {
                 width: 100%;
                 text-align: center;
@@ -122,10 +125,10 @@ Mirarnos en el espejo de NarColombia" />
                         <li>Busca un lugar de referencia del sitio donde te han robado (centro comercial, hospital, parque, etc)</li>
                         <li>Con el pin azul, a&ntilde;ade el punto con los datos que te solicitan (puedes arrastrar el pin azul o solo tocar o dar click en el mapa para moverlo)</li>
                         <li>Dale click a "A&ntilde;adir Punto" una vez hayas llenado los datos*</li>
-                        <li>Despu&eacute;s de colocar el punto, puedes decidir si contar tu experiencia o no en el micr&oacute;fono.</li>
+                        <li>Despu&eacute;s de colocar el punto, puedes decidir si contar tu experiencia o no a nuestro <a href="https://t.me/dotgoec_bot" target="_blank">Bot de Telegram</a> o en el micr&oacute;fono en la muestra.</li>
                         <li>Puedes observar los otros puntos y los nombres de las dem&aacute;s personas</li>
                     </ol><br />
-                    <span class="asterisk">*&nbsp;Puedes colocar tu nombre y apellido, o simplemente poner "an&oacute;nimo" si tienes miedo, preocupaci&oacute;n o no quieres usar tu nombre.</span><br />
+                    <span class="asterisk">*&nbsp;Puedes colocar tu nombre o pseu&oacute;nimo, o simplemente "An&oacute;nimo" si tienes miedo, preocupaci&oacute;n o no quieres usar tu nombre.</span><br />
                 </span>
                 <hr />
                 <button id="infobtn" onclick="infoToggle()">Ocultar</button>
@@ -204,7 +207,7 @@ Mirarnos en el espejo de NarColombia" />
                             if (debugging) console.log(p);
                             if ( p.length === 5 ) {
                                 if ( !isNaN(p[1]) && !isNaN(p[2]) ) {
-                                const pi = points.push(L.marker([p[1],p[2]],{icon: redIcon}).bindPopup(`<form><button class=\"pbutton\" onclick=\"javascript:map.flyTo(new L.LatLng(${p[1]},${p[2]}), 18)\"><span class=\"pname\">${p[0]}</span><br /><span class=\"pnationality\">${p[3]}</span></button>${ p[4] != ' ' ? '<br><a href=\"'+p[4]+'\" target=\"_blank\"><button class=\"purl\">Nota de voz</button></a>' : '' }</form>`)) - 1;
+                                const pi = points.push(L.marker([p[1],p[2]],{icon: redIcon}).bindPopup(`<form onsubmit=\"return false\"><button class=\"pbutton\" onclick=\"javascript:map.flyTo(new L.LatLng(${p[1]},${p[2]}), 18)\" formaction=\"\"><span class=\"pname\">${p[0]}</span><br /><span class=\"pnationality\">${p[3]}</span></button>${ p[4] != ' ' ? '<br><a href=\"'+p[4]+'\" target=\"_blank\"><button class=\"purl\">Nota de voz</button></a>' : '' }</form>`)) - 1;
                                     points[pi].addTo(pointsGroup);
                                 }
                             }
@@ -316,7 +319,10 @@ Mirarnos en el espejo de NarColombia" />
                 info.hidden = !info.hidden;
                 info.style['z-index'] = info.style['z-index'] * -1;
                 if ( info.hidden ) noSleep.enable();
-                if ( livePosID === undefined ) livePosID = navigator.geolocation.watchPosition(geoOk,geoErr);
+                if ( livePosID === undefined ) {
+                    loading.hidden = false;
+                    livePosID = navigator.geolocation.watchPosition(geoOk,geoErr);
+                }
             }
             
             const geoOk = (pos) => {

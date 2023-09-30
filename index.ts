@@ -1,4 +1,5 @@
 let debugging = false;
+const TelegramBot = require('node-telegram-bot-api');
 const pointsPath = "public/narcolombia/points.csv";
 let points = Bun.file(pointsPath);
 // const pwriter = points.writer();
@@ -98,3 +99,30 @@ console.log("Started!");
       // });
     // },
   // });
+  
+const tBot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, {polling: true});
+console.log(tBot);
+let narColombiaVoiceNote = false;
+tBot.on('message', (msg) => {
+  const chat = msg.chat;
+  console.log("CHAT:\n",chat);
+  if ( msg.text ) {
+    console.log("MESSAGE: ",msg.text);
+      switch ( msg.text ) {
+        case '/start':
+          tBot.sendMessage(chat.id, `Hola ${chat.username}! Para enviar tu relato de experiencia de robo en Guayaquil, envia una nota de voz o un audio al respecto.`);
+          narColombiaVoiceNote = true;
+          break;
+        default:
+          tBot.sendMessage(chat.id,"Por ahora solo recibo notas de voz para el registro de nuestra muestra:\n ```En cualquier parte de Guayaquil roban? Cartografias de robos urbanos en Guayaquil.```\nEnvia una nota de voz contando tu experiencia de robo en Guayaquil.");
+          break;
+      }
+  }
+  if ( msg.voice ) {
+    console.log("VOICE NOTE:\n",msg.voice);
+    if ( narColombiaVoiceNote ) {
+      tBot.sendVoice(process.env.NARCOLOMBIA_TELEGRAM_CHANNEL_ID, msg.voice.file_id);
+      tBot.sendMessage(chat.id,"Gracias por contar tu experiencia!\nEl audio ha sido recibido correctamente.");
+    }
+  }
+});
