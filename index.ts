@@ -122,7 +122,7 @@ tBot.on('message', (msg) => {
     console.log("VOICE NOTE:\n",msg.voice);
     if ( narColombiaVoiceNote ) {
       tBot.sendVoice(process.env.NARCOLOMBIA_TELEGRAM_CHANNEL_ID, msg.voice.file_id);
-      tBot.sendMessage(chat.id,"Gracias por contar tu experiencia!\nEl audio ha sido recibido correctamente.");
+      tBot.sendMessage(chat.id,"Gracias por contar tu experiencia!\nEl audio ha sido recibido correctamente y anadido al registro en [nuestro canal publico de la muestra](https://t.me/narcolombia_gye2023).");
     }
   }
 });
