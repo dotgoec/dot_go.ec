@@ -1,16 +1,14 @@
 let debugging = false;
 const TelegramBot = require('node-telegram-bot-api');
 const pointsPath = "public/narcolombia/points.csv";
+const voicenotesPath = "public/narcolombia/voicenotes.csv";
 let points = Bun.file(pointsPath);
-// const pwriter = points.writer();
-// pwriter.unref();
-const addPoint = async (p) => {
-  // pwriter.ref();
-  // pwriter.write(p.toString());
-  // pwriter.flush(); // write buffer to disk
-  // pwriter.unref();
-  Bun.write(pointsPath,p);
+let voicenotes = Bun.file(voicenotesPath);
+
+const addText = async (path, text) => {
+  console.log("WRITTEN: ",Bun.write(path, text));
 };
+
 const wss = Bun.serve({
     port: process.env.PORT,
     hostname: process.env.IP,
@@ -44,7 +42,7 @@ const wss = Bun.serve({
         }
         switch ( msg[0] ) {
           case "addPoint":
-            addPoint(await points.text() + msg[1]);
+            addText(pointsPath, await points.text() + msg[1]);
             pmsg = await points.text();
             ws.send(JSON.stringify( ["points", pmsg.split('\n')] ) );
             ws.publish("points", JSON.stringify( ["points", pmsg.split('\n')] ) );
@@ -102,27 +100,30 @@ console.log("Started!");
   
 const tBot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, {polling: true});
 console.log(tBot);
-let narColombiaVoiceNote = false;
-tBot.on('message', (msg) => {
+let narColombiaVoiceNote = {};
+tBot.on('message', async (msg) => {
   const chat = msg.chat;
   console.log("CHAT:\n",chat);
+  if ( narColombiaVoiceNote[msg.from.id] === undefined ) narColombiaVoiceNote[msg.from.id] = false;
   if ( msg.text ) {
     console.log("MESSAGE: ",msg.text);
       switch ( msg.text ) {
         case '/start':
+          narColombiaVoiceNote[msg.from.id] = true;
           tBot.sendMessage(chat.id, `Hola ${chat.username}! Para enviar tu relato de experiencia de robo en Guayaquil, envia una nota de voz o un audio al respecto.`);
-          narColombiaVoiceNote = true;
           break;
         default:
-          tBot.sendMessage(chat.id,"Por ahora solo recibo notas de voz para el registro de nuestra muestra:\n ```En cualquier parte de Guayaquil roban? Cartografias de robos urbanos en Guayaquil.```\nEnvia una nota de voz contando tu experiencia de robo en Guayaquil.");
+          tBot.sendMessage(chat.id,"Por ahora solo recibo notas de voz para el registro de nuestra muestra:\n\t\tEn cualquier parte de Guayaquil roban?\n\t\tCartografias de robos urbanos en Guayaquil.\nSi gustas, envia una nota de voz contando tu experiencia de robo en Guayaquil.");
           break;
       }
   }
   if ( msg.voice ) {
     console.log("VOICE NOTE:\n",msg.voice);
-    if ( narColombiaVoiceNote ) {
+    if ( narColombiaVoiceNote[msg.from.id] ) {
       tBot.sendVoice(process.env.NARCOLOMBIA_TELEGRAM_CHANNEL_ID, msg.voice.file_id);
-      tBot.sendMessage(chat.id,"Gracias por contar tu experiencia!\nEl audio ha sido recibido correctamente y anadido al registro en [nuestro canal publico de la muestra](https://t.me/narcolombia_gye2023).");
+      tBot.sendMessage(chat.id,"Gracias por contar tu experiencia!\nEl audio ha sido recibido correctamente y anadido al registro en nuestro canal publico de la muestra:\n https://t.me/narcolombia_gye2023.");
+      addText(voicenotesPath, await voicenotes.text() + msg.from.id + ',' + msg.voice.file_id + '\n');
     }
   }
+  console.log(narColombiaVoiceNote);
 });
