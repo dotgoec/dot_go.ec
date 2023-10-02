@@ -17,6 +17,8 @@ const wss = Bun.serve({
       if (debugging) console.log("SERVER: ",server);
       // upgrade the request to a WebSocket
       let cookies = new Headers();
+      cookies.append("Set-Cookie",`SameSite=none`);
+      cookies.append("Set-Cookie",`Secure`);
       cookies.append("Set-Cookie",`sessionID=${Math.floor(Math.random() * Date.now()).toString(16)}`);
       cookies.append("Set-Cookie",`mapTilesKey=${process.env.MAPTILES_KEY}`);
       cookies.append("Set-Cookie",`jawgKey=${process.env.JAWG_KEY}`);
