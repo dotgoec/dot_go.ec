@@ -287,7 +287,7 @@ Mirarnos en el espejo de NarColombia" />
                             if (debugging) console.log(p);
                             if ( p.length === 5 ) {
                                 if ( !isNaN(p[1]) && !isNaN(p[2]) ) {
-                                    const pi = points.push(L.marker([p[1],p[2]],{icon: pinIcon}).bindPopup(`<form onsubmit=\"return false\"><button class=\"pbutton\" onclick=\"javascript:map.flyTo(new L.LatLng(${p[1]},${p[2]}), 18)\" formaction=\"\"><span class=\"pname\">${p[0]}</span><br /><span class=\"pnationality\">${p[3]}</span></button>${ p[4] != ' ' ? '<br><a href=\"'+p[4]+'\" target=\"_blank\"><button class=\"purl\">Nota de voz</button></a>' : '' }</form>`)) - 1;
+                                    const pi = points.push(L.marker([p[1],p[2]],{icon: pinIcon}).bindPopup(`<form onsubmit=\"return false\"><button class=\"pbutton\" onclick=\"javascript:map.flyTo(new L.LatLng(${p[1]},${p[2]}), 18)\" formaction=\"\"><span class=\"pname\">${p[0]}</span><br /><span class=\"pnationality\">${p[3]}</span></button>${ p[4] != ' ' ? '' : '' }</form>`)) - 1;
                                     pointsGroup.addLayer(points[pi]);
                                 }
                             }
