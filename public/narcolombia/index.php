@@ -1,4 +1,3 @@
-<!doctype html>
 <html>
     <head>
         <title>NarColombia</title>
@@ -15,6 +14,13 @@ Mirarnos en el espejo de NarColombia" />
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
         <!-- Leaflet plugins -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js" integrity="sha512-OFs3W4DIZ5ZkrDhBFtsCP6JXtMEDGmhl0QPlmWYBJay40TT1n3gt2Xuw8Pf/iezgW9CdabjkNChRqozl/YADmg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css" integrity="sha512-6ZCLMiYwTeli2rVh3XAPxy3YoR5fVxGdH/pz+KMCzRY2M65Emgkw00Yqmhh8qLGeYQ3LbVZGdmOX9KUjSKr0TA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+        <script src="https://yigityuce.github.io/Leaflet.Control.Custom/Leaflet.Control.Custom.js"></script>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+        <link rel="stylesheet" href="https://masajid390.github.io/BeautifyMarker/leaflet-beautify-marker-icon.css">
+        <script src="https://masajid390.github.io/BeautifyMarker/leaflet-beautify-marker-icon.js"></script>
         <link rel="stylesheet" href="https://maps.locationiq.com/v2/libs/leaflet-geocoder/1.9.6/leaflet-geocoder-locationiq.min.css">
         <script src="https://maps.locationiq.com/v2/libs/leaflet-geocoder/1.9.6/leaflet-geocoder-locationiq.min.js"></script>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.css">
@@ -22,10 +28,14 @@ Mirarnos en el espejo de NarColombia" />
         <link href="https://unpkg.com/maplibre-gl@3.2.1/dist/maplibre-gl.css" rel='stylesheet' />
         <script src="https://unpkg.com/maplibre-gl@3.2.1/dist/maplibre-gl.js"></script>
         <script src="https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.0.19/leaflet-maplibre-gl.js"></script>
+        
         <!-- Other js utilities -->
         <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js" crossorigin=""></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/nosleep/0.12.0/NoSleep.min.js" integrity="sha512-DSzvYfxJWRi3E6vfcGQfL5CqOlApxYrrdqRP3hRCnoiZ0oM6+ccYjbtdzQFUrAOI/ehKk0VKFuKs5GseGPkVjQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
         <style>
+            :root {
+                --gradient-percentage: 100%;
+            }
             body {
                 padding: 0;
                 margin: 0;
@@ -60,7 +70,7 @@ Mirarnos en el espejo de NarColombia" />
                 height: 100%;
             }
             #info {
-                background-color: #000000cc;
+                background: radial-gradient(closest-corner, #000000cc var(--gradient-percentage), rgba(0,0,0,0) 100%);
                 display: flex;
                 font-family: system-ui;
                 overflow: auto;
@@ -101,6 +111,15 @@ Mirarnos en el espejo de NarColombia" />
                 font-size: 1.5em;
                 text-align: center;
             }
+            .qrcode {
+                transform-origin: 10px calc(100% - 10px);
+                transform: scale(0.25);
+                margin: 10px;
+                padding: 0;
+                cursor: pointer;
+                border-radius: 4px;
+                border: 2px solid rgba(0,0,0,0.2);
+            }
             [hidden] {
                 display: none !important;
             }
@@ -138,6 +157,8 @@ Mirarnos en el espejo de NarColombia" />
         </div>
         <div id="loading"><img id="loadgif" src='../DotGoLoadDark.gif' /></div>
         <script>
+            var debugging = false, init = false;
+            if ( location.search.search('debug') > 0 ) debugging = true;
             // Opera 8.0+
             var isOpera = (!!window.opr && !!opr.addons) || !!window.opera || navigator.userAgent.indexOf(' OPR/') >= 0;
             // Firefox 1.0+
@@ -152,10 +173,9 @@ Mirarnos en el espejo de NarColombia" />
             var isChrome = !!window.chrome && (!!window.chrome.webstore || !!window.chrome.runtime);
             // Blink engine detection
             var isBlink = (isChrome || isOpera) && !!window.CSS;
-            var debugging = false, init = false;
-            if ( location.hash.search('debug') > -1 ) debugging = true;
+            var root = document.querySelector(':root');
             const noSleep = new NoSleep();
-            var info = document.getElementById('info');
+            var info = document.getElementById('info'), infoTriggered = false, infoClosing = false, infoOpening = false, infoScale = 1, infoPosition = { x: 0, y: 0 };
             var loading = document.getElementById('loading');
             const WS_ADDRESS = "wss://dotgoec.alwaysdata.net/ws";
             var socket = new WebSocket(WS_ADDRESS);
@@ -174,16 +194,8 @@ Mirarnos en el espejo de NarColombia" />
                 radius: 0
             }), livePosID;
             var liveUpdateID, liveUpdate;
-            var clickMarker = L.marker(defaultLatLng).bindPopup(clickPopup), redIcon = L.icon({
-                iconUrl: 'google-maps-icon-png-23.png',
-                iconSize: [26, 34],
-                iconAnchor: [13, 34],
-                popupAnchor: [0, -30],
-                shadowUrl: 'google-maps-icon-png-23_shadow.png',
-                shadowSize: [26, 34],
-                shadowAnchor: [13, 34]
-            });
-            var points = [], pointsGroup = L.layerGroup(), layerControl = L.control.layers().addTo(map);
+            var clickMarker = L.marker(defaultLatLng).bindPopup(clickPopup).addTo(map).removeFrom(map);
+            var points = [], pointsGroup = ( location.search.search('cluster') > 0 ? L.markerClusterGroup() : L.layerGroup() ), layerControl = L.control.layers().addTo(map);
             var geocoder = L.control.geocoder('pk.c2496aa6035c8e2af4d1722c1a87a9f2',{
                 params: {
                     countrycodes: 'EC'
@@ -204,7 +216,60 @@ Mirarnos en el espejo de NarColombia" />
                 if ( debugging ) console.log(b,m);
                 map.flyTo( ( livePos.getRadius() > 0 ) ? liveLatLng : centeredLatLng, 12);
             }).addTo(map).setPosition('topleft');
-            
+            const pinIcon = ( 
+                ( location.search.search('pinimg') > 0 ) ?
+                L.icon({
+                    iconUrl: 'google-maps-icon-png-23.png',
+                    iconSize: [26, 34],
+                    iconAnchor: [13, 34],
+                    popupAnchor: [0, -30],
+                    shadowUrl: 'google-maps-icon-png-23_shadow.png',
+                    shadowSize: [26, 34],
+                    shadowAnchor: [13, 34]
+                })
+                : L.BeautifyIcon.icon({
+                    icon: 'info',
+                    iconShape: 'marker',
+                    iconSize: [25, 25],
+                    backgroundColor: '#333c',
+                    borderColor: '#333',
+                    textColor: '#fff',
+                    innerIconStyle: 'font-size:1.25em;margin:0.25em;'
+                })
+            );
+            var customControl = L.control.custom({
+                position: 'bottomleft',
+                content : '<a href="https://t.me/narcolombia_gye2023" target="_blank" title="Canal de Telegram" ><img src="telegram_qrcode.jpeg"></a>',
+                classes : 'qrcode',
+                // style   :
+                // {
+                    // margin: '10px',
+                    // padding: '0px 0 0 0',
+                    // cursor: 'pointer',
+                // },
+                // datas   :
+                // {
+                    // 'foo': 'bar',
+                // },
+                // events:
+                // {
+                    // click: function(data)
+                    // {
+                        // console.log('wrapper div element clicked');
+                        // console.log(data);
+                    // },
+                    // dblclick: function(data)
+                    // {
+                        // console.log('wrapper div element dblclicked');
+                        // console.log(data);
+                    // },
+                    // contextmenu: function(data)
+                    // {
+                        // console.log('wrapper div element contextmenu');
+                        // console.log(data);
+                    // },
+                // }
+            });
             const onMessage = (event) => {
                 if ( debugging ) console.log("MSG:\n",event);
                 let msg;
@@ -222,8 +287,8 @@ Mirarnos en el espejo de NarColombia" />
                             if (debugging) console.log(p);
                             if ( p.length === 5 ) {
                                 if ( !isNaN(p[1]) && !isNaN(p[2]) ) {
-                                const pi = points.push(L.marker([p[1],p[2]],{icon: redIcon}).bindPopup(`<form onsubmit=\"return false\"><button class=\"pbutton\" onclick=\"javascript:map.flyTo(new L.LatLng(${p[1]},${p[2]}), 18)\" formaction=\"\"><span class=\"pname\">${p[0]}</span><br /><span class=\"pnationality\">${p[3]}</span></button>${ p[4] != ' ' ? '<br><a href=\"'+p[4]+'\" target=\"_blank\"><button class=\"purl\">Nota de voz</button></a>' : '' }</form>`)) - 1;
-                                    points[pi].addTo(pointsGroup);
+                                    const pi = points.push(L.marker([p[1],p[2]],{icon: pinIcon}).bindPopup(`<form onsubmit=\"return false\"><button class=\"pbutton\" onclick=\"javascript:map.flyTo(new L.LatLng(${p[1]},${p[2]}), 18)\" formaction=\"\"><span class=\"pname\">${p[0]}</span><br /><span class=\"pnationality\">${p[3]}</span></button>${ p[4] != ' ' ? '<br><a href=\"'+p[4]+'\" target=\"_blank\"><button class=\"purl\">Nota de voz</button></a>' : '' }</form>`)) - 1;
+                                    pointsGroup.addLayer(points[pi]);
                                 }
                             }
                         }
@@ -314,6 +379,8 @@ Mirarnos en el espejo de NarColombia" />
             };
             
             function addLayers(live = false) {
+                // layerControl.addOverlay(customControl, "C&oacute;digo QR");
+                customControl.addTo(map);
                 if ( live ) {
                     layerControl.addOverlay(livePos, "Tu posici&oacute;n actual");
                 }
@@ -329,15 +396,22 @@ Mirarnos en el espejo de NarColombia" />
                 });
             }
             
-            function infoToggle() {
+            function toggleInfo() {
                 noSleep.disable();
-                info.hidden = !info.hidden;
-                info.style['z-index'] = info.style['z-index'] * -1;
+                if ( infoClosing ) info.hidden = true;
+                // info.style['z-index'] = info.style['z-index'] * -1;
                 if ( info.hidden ) noSleep.enable();
                 if ( livePosID === undefined ) {
                     loading.hidden = false;
                     livePosID = navigator.geolocation.watchPosition(geoOk,geoErr);
                 }
+            }
+            
+            function infoToggle() {
+                info.hidden = false;
+                infoTriggered = true;
+                if ( infoScale >= 1 ) infoClosing = true;
+                if ( infoScale <= 0 ) infoOpening = true;
             }
             
             const geoOk = (pos) => {
@@ -379,6 +453,7 @@ Mirarnos en el espejo de NarColombia" />
                 loading.hidden = false;
                 try {
                     socket.send(JSON.stringify(["addPoint",`${document.getElementById("pointName").value},${clickMarker.getLatLng().lat},${clickMarker.getLatLng().lng},${document.getElementById("pointNationality").value},${" "}\n`]));
+                    addPointForm.innerHTML = pointForm;
                     clickPopup = addPointBtn;
                     clickMarker.closePopup();
                     clickMarker.setPopupContent(clickPopup);
@@ -409,13 +484,13 @@ Mirarnos en el espejo de NarColombia" />
             
             addPointForm.id = "addPointForm";
             addPointForm.action = '';
-            addPointForm.innerHTML = `
+            const pointForm = `
                 <label for=\"name\">Nombre: </label><br />
                 <input type=\"text\" name=\"Name\" id=\"pointName\" placeholder=\"Nombre o An&oacute;nimo\" required /><br />
                 <label for=\"nationality\">Nacionalidad: </label><br />
                 <input type=\"text\" name=\"Nationality\" id=\"pointNationality\" placeholder=\"Ciudad o pa&iacute;s\" required /><br />
                 <input type=\"submit\" id=\"pointSubmit\" value=\"A&ntilde;adir Punto\" formaction=\"javascript:sendForm()\"/>`
-            
+            addPointForm.innerHTML = pointForm;            
             socket.addEventListener('message', onMessage);
             socket.addEventListener('open', onOpen);
             socket.addEventListener('close', onClose);
@@ -432,6 +507,26 @@ Mirarnos en el espejo de NarColombia" />
                         console.error('Socket encountered error: ', err.message, 'Closing socket');
                         socket.close();
                     });
+                }
+                if ( infoTriggered ) {
+                    info.style['transform-origin'] = `${infoMapBtn.getContainer().getBoundingClientRect().x + ( infoMapBtn.getContainer().clientWidth / 2 )}px ${infoMapBtn.getContainer().getBoundingClientRect().y + ( infoMapBtn.getContainer().clientHeight / 2 )}px`;
+                    if ( debugging ) console.log(infoScale);
+                    if ( infoClosing ) info.style['transform'] = `scale(${ infoScale -= 0.05 })`;
+                    if ( infoOpening ) info.style['transform'] = `scale(${ infoScale += 0.05 })`;
+                    if ( infoClosing || infoOpening ) {
+                        info.style['opacity'] = infoScale;
+                        root.style.setProperty('--gradient-percentage', `${ infoScale.toFixed(2) * 100 }%`);
+                    }
+                    if ( infoOpening && infoScale >= 1 ) {
+                        toggleInfo();
+                        infoOpening = false;
+                        infoTriggered = false;
+                    }
+                    if ( infoClosing && infoScale <= 0 ) {
+                        toggleInfo();
+                        infoClosing = false;
+                        infoTriggered = false;
+                    }
                 }
                 liveUpdateID = requestAnimationFrame(liveUpdate);
             };

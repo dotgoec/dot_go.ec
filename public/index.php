@@ -1,4 +1,3 @@
-<!doctype html>
 <html>
     <head>
         <title>DOT_GO</title>

@@ -17,8 +17,8 @@ const wss = Bun.serve({
       if (debugging) console.log("SERVER: ",server);
       // upgrade the request to a WebSocket
       let cookies = new Headers();
-      cookies.append("Set-Cookie",`SameSite=none`);
       cookies.append("Set-Cookie",`Secure`);
+      cookies.append("Set-Cookie",`SameSite=none`);
       cookies.append("Set-Cookie",`sessionID=${Math.floor(Math.random() * Date.now()).toString(16)}`);
       cookies.append("Set-Cookie",`mapTilesKey=${process.env.MAPTILES_KEY}`);
       cookies.append("Set-Cookie",`jawgKey=${process.env.JAWG_KEY}`);
@@ -29,7 +29,7 @@ const wss = Bun.serve({
       })) {
         return; // do not return a Response
       }
-      return new Response("🤨", { status: 500 });
+      return new Response("🤨🫡", { status: 500 });
     }, // upgrade logic
     websocket: {
       // handler called when a message is received
@@ -111,7 +111,7 @@ tBot.on('message', async (msg) => {
       switch ( msg.text ) {
         case '/start':
           narColombiaVoiceNote[msg.from.id] = true;
-          tBot.sendMessage(chat.id, `Hola ${chat.username}! Para enviar tu relato de experiencia de robo en Guayaquil, envia una nota de voz o un audio al respecto.`);
+          tBot.sendMessage(chat.id, `Hola${ chat.username ? " " + chat.username : "" }! Para enviar tu relato de experiencia de robo en Guayaquil, envia una nota de voz o un audio al respecto.`);
           break;
         default:
           tBot.sendMessage(chat.id,"Por ahora solo recibo notas de voz para el registro de nuestra muestra:\n\t\tEn cualquier parte de Guayaquil roban?\n\t\tCartografias de robos urbanos en Guayaquil.\nSi gustas, envia una nota de voz contando tu experiencia de robo en Guayaquil.");
@@ -122,7 +122,7 @@ tBot.on('message', async (msg) => {
     if (debugging) console.log("VOICE NOTE:\n",msg.voice);
     if ( narColombiaVoiceNote[msg.from.id] ) {
       tBot.sendVoice(process.env.NARCOLOMBIA_TELEGRAM_CHANNEL_ID, msg.voice.file_id);
-      tBot.sendMessage(chat.id,"Gracias por contar tu experiencia!\nEl audio ha sido recibido correctamente y anadido al registro en nuestro canal publico de la muestra:\n https://t.me/narcolombia_gye2023.");
+      tBot.sendMessage(chat.id,"Gracias por contar tu experiencia!\nEl audio ha sido recibido correctamente y añadido al registro en nuestro canal publico de la muestra:\n https://t.me/narcolombia_gye2023.");
       addText(voicenotesPath, await voicenotes.text() + msg.from.id + ',' + msg.voice.file_id + '\n');
     }
   }
