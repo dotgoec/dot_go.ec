@@ -534,7 +534,7 @@ Mirarnos en el espejo de NarColombia" />
                 liveUpdateID = requestAnimationFrame(liveUpdate);
                 map.on('click', onMapClick);
             } else {
-                alert("Lo sentimos, por ahora la p\u00E1gina web no funciona correctamente en este navegador a\u00FAn, use otro navegador.");
+                alert("Lo sentimos, por ahora la p\u00E1gina web no funciona correctamente en este navegador a\u00FAn, use otro navegador.\nRedirigiendo...");
                 location.href='https://dotgoec.alwaysdata.net/';
             }
         </script>
