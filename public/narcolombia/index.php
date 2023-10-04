@@ -429,11 +429,11 @@ Mirarnos en el espejo de NarColombia" />
             }
             
             function toggleInfo() {
-                noSleep.disable();
                 if ( infoClosing ) info.hidden = true;
                 // info.style['z-index'] = info.style['z-index'] * -1;
-                if ( info.hidden ) noSleep.enable();
+                // if ( info.hidden ) noSleep.enable();
                 if ( livePosID === undefined ) {
+                    noSleep.enable();
                     loading.hidden = false;
                     livePosID = navigator.geolocation.watchPosition(geoOk,geoErr);
                 }
