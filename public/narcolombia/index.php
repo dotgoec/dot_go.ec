@@ -250,7 +250,7 @@ Mirarnos en el espejo de NarColombia" />
             );
             var customControl = L.control.custom({
                 position: 'bottomleft',
-                content : 'Comparte tu experiencia <a href="https://t.me/narcolombia_gye2023" target="_blank" title="Canal de Telegram" >aqu&iacute;:<br><img class="qrcode" src="telegram_qrcode.jpeg"></a>',
+                content : 'Comparte tu experiencia <a href="https://t.me/dotgoec_bot" target="_blank" title="Canal de Telegram" >aqu&iacute;</a>:<br><a href="https://t.me/narcolombia_gye2023" target="_blank" title="Canal de Telegram" ><img class="qrcode" src="telegram_qrcode.jpeg"></a>',
                 // classes : 'qrcode',
                 style   :
                 {
