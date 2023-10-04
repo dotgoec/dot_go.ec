@@ -28,22 +28,24 @@ Mirarnos en el espejo de NarColombia" />
         <link href="https://unpkg.com/maplibre-gl@3.2.1/dist/maplibre-gl.css" rel='stylesheet' />
         <script src="https://unpkg.com/maplibre-gl@3.2.1/dist/maplibre-gl.js"></script>
         <script src="https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.0.19/leaflet-maplibre-gl.js"></script>
-        
+        <script src="https://unpkg.com/leaflet.fullscreen@latest/Control.FullScreen.js"></script>
         <!-- Other js utilities -->
         <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js" crossorigin=""></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/nosleep/0.12.0/NoSleep.min.js" integrity="sha512-DSzvYfxJWRi3E6vfcGQfL5CqOlApxYrrdqRP3hRCnoiZ0oM6+ccYjbtdzQFUrAOI/ehKk0VKFuKs5GseGPkVjQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
         <style>
             :root {
                 --gradient-percentage: 100%;
             }
             body {
+                background-color: black;
                 padding: 0;
                 margin: 0;
                 overflow: hidden;
             }
             html, body, #map {
-                height: 100%;
                 width: 100vw;
+                height: 100%;
                 z-index: 0;
             }
             a {
@@ -67,21 +69,22 @@ Mirarnos en el espejo de NarColombia" />
                 padding: 0;
                 margin: 0;
                 width: 100vw;
-                height: 100%;
+                height: 100vh;
             }
             #info {
                 background: radial-gradient(closest-corner, #000000cc var(--gradient-percentage), rgba(0,0,0,0) 100%);
-                display: flex;
+                display: grid;
                 font-family: system-ui;
                 overflow: auto;
             }
             #infoText {
                 background-color: #000000cc;
-                margin: auto;
+                margin: auto auto 0 auto;
                 padding: 1em;
                 vertical-align: middle;
                 text-align: center;
                 color: #fff;
+                transform: scale(0.9);
             }
             #instructions > ol {
                 /* list-style-position: inside; */
@@ -113,12 +116,19 @@ Mirarnos en el espejo de NarColombia" />
             }
             .qrcode {
                 transform-origin: 10px calc(100% - 10px);
-                transform: scale(0.25);
-                margin: 10px;
+                /* transform: scale(0.2); */
+                width: 100%;
+                margin: 0;
                 padding: 0;
                 cursor: pointer;
                 border-radius: 4px;
                 border: 2px solid rgba(0,0,0,0.2);
+            }
+            #google_translate_element {
+                background: #0000;
+                transform: scale(0.75);
+                text-align: center;
+                margin: 0 auto auto auto;
             }
             [hidden] {
                 display: none !important;
@@ -154,6 +164,7 @@ Mirarnos en el espejo de NarColombia" />
                 <button id="infobtn" onclick="infoToggle()">Ocultar</button>
                 <hr />
             </div>
+            <div id="google_translate_element"></div>
         </div>
         <div id="loading"><img id="loadgif" src='../DotGoLoadDark.gif' /></div>
         <script>
@@ -239,14 +250,15 @@ Mirarnos en el espejo de NarColombia" />
             );
             var customControl = L.control.custom({
                 position: 'bottomleft',
-                content : '<a href="https://t.me/narcolombia_gye2023" target="_blank" title="Canal de Telegram" ><img src="telegram_qrcode.jpeg"></a>',
-                classes : 'qrcode',
-                // style   :
-                // {
-                    // margin: '10px',
-                    // padding: '0px 0 0 0',
-                    // cursor: 'pointer',
-                // },
+                content : 'Comparte tu experiencia <a href="https://t.me/narcolombia_gye2023" target="_blank" title="Canal de Telegram" >aqu&iacute;:<br><img class="qrcode" src="telegram_qrcode.jpeg"></a>',
+                // classes : 'qrcode',
+                style   :
+                {
+                    margin: '10px',
+                    padding: '0',
+                    cursor: 'pointer',
+                    width: '20%'
+                },
                 // datas   :
                 // {
                     // 'foo': 'bar',
@@ -270,6 +282,25 @@ Mirarnos en el espejo de NarColombia" />
                     // },
                 // }
             });
+		
+            // create fullscreen control
+            var fsControl = L.control.fullscreen({
+                position:'bottomright',
+                content: '<b>&#x26F6;</b>',
+                fullscreenElement: map._container
+            });
+            // add fullscreen control to the map
+            map.addControl(fsControl);
+            // events are fired when entering or exiting fullscreen.
+            map.on('enterFullscreen', function(e){
+                if ( debugging ) console.log('entered fullscreen', e);
+                infoMapBtn.removeFrom(map);
+            });
+
+            map.on('exitFullscreen', function(e){
+                if ( debugging ) console.log('exited fullscreen', e);
+                infoMapBtn.addTo(map);
+            });
             const onMessage = (event) => {
                 if ( debugging ) console.log("MSG:\n",event);
                 let msg;
@@ -282,6 +313,7 @@ Mirarnos en el espejo de NarColombia" />
                 switch (msg[0]) {
                     case "points":
                         points = [];
+                        pointsGroup.clearLayers();
                         for ( i = 0; i < msg[1].length; i++ ) {
                             const p = msg[1][i].split(',');
                             if (debugging) console.log(p);
@@ -408,6 +440,7 @@ Mirarnos en el espejo de NarColombia" />
             }
             
             function infoToggle() {
+                // if ( livePosID === undefined ) fsControl.toggleFullScreen();
                 info.hidden = false;
                 infoTriggered = true;
                 if ( infoScale >= 1 ) infoClosing = true;
@@ -427,7 +460,7 @@ Mirarnos en el espejo de NarColombia" />
                     clickMarker.setLatLng(liveLatLng);
                     addLayers(true);
                     setTimeout(()=>{
-                        map.setView(liveLatLng, 12);
+                        map.setView(centeredLatLng, 12);
                         loading.hidden = true;
                         livePos.addTo(map);
                     },500);
@@ -536,6 +569,12 @@ Mirarnos en el espejo de NarColombia" />
             } else {
                 alert("Lo sentimos, por ahora la p\u00E1gina web no funciona correctamente en este navegador a\u00FAn, use otro navegador.\nRedirigiendo...");
                 location.href='https://dotgoec.alwaysdata.net/';
+            }
+            function googleTranslateElementInit() {
+                new google.translate.TranslateElement({
+                    pageLanguage: 'es', 
+                    // layout: google.translate.TranslateElement.InlineLayout.HORIZONTAL
+                }, 'google_translate_element');
             }
         </script>
     </body>
