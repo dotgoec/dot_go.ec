@@ -58,7 +58,7 @@ Mirarnos en el espejo de NarColombia" />
                 width: 100%;
                 text-align: center;
             }
-            .pointFormElm {
+            .pointformelm {
                 margin: 0 0 0.5em 0;
                 width: 100%;
             }
@@ -198,7 +198,7 @@ Mirarnos en el espejo de NarColombia" />
             var loading = document.getElementById('loading');
             const WS_ADDRESS = "wss://dotgoec.alwaysdata.net/ws";
             var socket = new WebSocket(WS_ADDRESS);
-            const defaultLatLng = new L.LatLng(-2.192029, -79.880256), centeredLatLng = new L.LatLng(-2.1579002, -79.9088502), addPointBtn = "<form><input class\"pointFormElm\" type=\"submit\" id=\"pointSubmit\" value=\"A&ntilde;adir Punto\" formaction=\"javascript:addPoint()\"/></form>";
+            const defaultLatLng = new L.LatLng(-2.192029, -79.880256), centeredLatLng = new L.LatLng(-2.1579002, -79.9088502), addPointBtn = "<form><input type=\"submit\" id=\"pointSubmit\" value=\"A&ntilde;adir Punto\" formaction=\"javascript:addPoint()\" style=\"width: 100%;\"/></form>";
             var map = L.map('map',{
                 preferCanvas: true,
                 worldCopyJump: true,
@@ -543,13 +543,13 @@ Mirarnos en el espejo de NarColombia" />
             addPointForm.id = "addPointForm";
             addPointForm.action = '';
             const pointForm = `
-                <label class=\"pointFormElm\" for=\"pointName\">Nombre: </label><br />
-                <input class=\"pointFormElm\" type=\"text\" name=\"Name\" id=\"pointName\" placeholder=\"Nombre o An&oacute;nimo\" required /><br />
-                <label class=\"pointFormElm\" for=\"pointNationality\">Nacionalidad: </label><br />
-                <input class=\"pointFormElm\" type=\"text\" name=\"Nationality\" id=\"pointNationality\" placeholder=\"Ciudad o pa&iacute;s\" required /><br />
-                <label class=\"pointFormElm\" for=\"pointYear\">Año: </label><br />
-                <input class=\"pointFormElm\" type=\"number\" name=\"Year\" id=\"pointYear\" placeholder=\"YYYY (Opcional)\" min=\"1920\" max=\"2024\" /><br />
-                <input class=\"pointFormElm\" type=\"submit\" id=\"pointSubmit\" value=\"A&ntilde;adir Punto\" formaction=\"javascript:sendForm()\"/>`
+                <label class=\"pointformelm\" for=\"pointName\">Nombre: </label><br />
+                <input class=\"pointformelm\" type=\"text\" name=\"Name\" id=\"pointName\" placeholder=\"Nombre o An&oacute;nimo\" required /><br />
+                <label class=\"pointformelm\" for=\"pointNationality\">Nacionalidad: </label><br />
+                <input class=\"pointformelm\" type=\"text\" name=\"Nationality\" id=\"pointNationality\" placeholder=\"Ciudad o pa&iacute;s\" required /><br />
+                <label class=\"pointformelm\" for=\"pointYear\">Año: </label><br />
+                <input class=\"pointformelm\" type=\"number\" name=\"Year\" id=\"pointYear\" placeholder=\"YYYY (Opcional)\" min=\"1920\" max=\"2024\" /><br />
+                <input class=\"pointformelm\" type=\"submit\" id=\"pointSubmit\" value=\"A&ntilde;adir Punto\" formaction=\"javascript:sendForm()\"/>`
             addPointForm.innerHTML = pointForm;            
             socket.addEventListener('message', onMessage);
             socket.addEventListener('open', onOpen);
