@@ -48,12 +48,19 @@ Mirarnos en el espejo de NarColombia" />
                 height: 100%;
                 z-index: 0;
             }
+            #map, #search-box, #result {
+                position: absolute;
+            }
             a {
                 color: cornflowerblue;
             }
             #addPointForm {
                 width: 100%;
                 text-align: center;
+            }
+            .pointFormElm {
+                margin: 0 0 0.5em 0;
+                width: 100%;
             }
             .pname {
                 font-weight: bold;
@@ -161,7 +168,7 @@ Mirarnos en el espejo de NarColombia" />
                     <span class="asterisk">*&nbsp;Puedes colocar tu nombre o pseu&oacute;nimo, o simplemente "An&oacute;nimo" si tienes miedo, preocupaci&oacute;n o no quieres usar tu nombre.</span><br />
                 </span>
                 <hr />
-                <button id="infobtn" onclick="infoToggle()">Ocultar</button>
+                <button id="infobtn" onclick="infoToggle()">Cerrar</button>
                 <hr />
             </div>
             <div id="google_translate_element"></div>
@@ -186,11 +193,12 @@ Mirarnos en el espejo de NarColombia" />
             var isBlink = (isChrome || isOpera) && !!window.CSS;
             var root = document.querySelector(':root');
             const noSleep = new NoSleep();
+            var gte = document.getElementById('google_translate_element');
             var info = document.getElementById('info'), infoTriggered = false, infoClosing = false, infoOpening = false, infoScale = 1, infoPosition = { x: 0, y: 0 };
             var loading = document.getElementById('loading');
             const WS_ADDRESS = "wss://dotgoec.alwaysdata.net/ws";
             var socket = new WebSocket(WS_ADDRESS);
-            const defaultLatLng = new L.LatLng(-2.192029, -79.880256), centeredLatLng = new L.LatLng(-2.1579002, -79.9088502), addPointBtn = "<form><input type=\"submit\" id=\"pointSubmit\" value=\"A&ntilde;adir Punto\" formaction=\"javascript:addPoint()\"/></form>";
+            const defaultLatLng = new L.LatLng(-2.192029, -79.880256), centeredLatLng = new L.LatLng(-2.1579002, -79.9088502), addPointBtn = "<form><input class\"pointFormElm\" type=\"submit\" id=\"pointSubmit\" value=\"A&ntilde;adir Punto\" formaction=\"javascript:addPoint()\"/></form>";
             var map = L.map('map',{
                 preferCanvas: true,
                 worldCopyJump: true,
@@ -205,28 +213,19 @@ Mirarnos en el espejo de NarColombia" />
                 radius: 0
             }), livePosID;
             var liveUpdateID, liveUpdate;
-            var clickMarker = L.marker(defaultLatLng).bindPopup(clickPopup).addTo(map).removeFrom(map);
+            var clickMarker = L.marker(defaultLatLng).bindPopup(clickPopup, {
+                minWidth: 150
+            }).addTo(map).removeFrom(map);
             var points = [], pointsGroup = ( location.search.search('cluster') > 0 ? L.markerClusterGroup() : L.layerGroup() ), layerControl = L.control.layers().addTo(map);
-            var geocoder = L.control.geocoder('pk.c2496aa6035c8e2af4d1722c1a87a9f2',{
-                params: {
-                    countrycodes: 'EC'
-                },
-                focus: true,
-                markers: false,
-                placeholder: "Busca tu punto de referencia...",
-                expanded: true,
-                panToPoint: true,
-                fullWidth: false
-            }).addTo(map);
-            geocoder._reset.innerHTML = "<b>&#8676;</b>";
+            var geocoder;
             var infoMapBtn = L.easyButton('&#9776;',(b,m) => {
                 if ( debugging ) console.log(b,m);
                 infoToggle();
-            }).addTo(map).setPosition('topleft');
+            });
             var resetViewBtn = L.easyButton('<b>&#8634;&nbsp;</b>',(b,m) => {
                 if ( debugging ) console.log(b,m);
                 map.flyTo( ( livePos.getRadius() > 0 ) ? liveLatLng : centeredLatLng, 12);
-            }).addTo(map).setPosition('topleft');
+            });
             const pinIcon = ( 
                 ( location.search.search('pinimg') > 0 ) ?
                 L.icon({
@@ -319,11 +318,12 @@ Mirarnos en el espejo de NarColombia" />
                             if (debugging) console.log(p);
                             if ( p.length === 5 ) {
                                 if ( !isNaN(p[1]) && !isNaN(p[2]) ) {
-                                    const pi = points.push(L.marker([p[1],p[2]],{icon: pinIcon}).bindPopup(`<form onsubmit=\"return false\"><button class=\"pbutton\" onclick=\"javascript:map.flyTo(new L.LatLng(${p[1]},${p[2]}), 18)\" formaction=\"\"><span class=\"pname\">${p[0]}</span><br /><span class=\"pnationality\">${p[3]}</span></button>${ p[4] != ' ' ? '' : '' }</form>`)) - 1;
+                                    const pi = points.push(L.marker([p[1],p[2]],{icon: pinIcon}).bindPopup(`<form onsubmit=\"return false\"><button class=\"pbutton\" onclick=\"javascript:map.flyTo(new L.LatLng(${p[1]},${p[2]}), 18)\" formaction=\"\"><span class=\"pname notranslate\">${p[0]}</span><br /><span class=\"pnationality notranslate\">${p[3]}</span><br /><span class=\"pyear\">${p[4]}</span></button></form>`)) - 1;
                                     pointsGroup.addLayer(points[pi]);
                                 }
                             }
                         }
+                        map.flyTo(centeredLatLng, 12);
                         break;
                     default:
                         break;
@@ -342,7 +342,21 @@ Mirarnos en el espejo de NarColombia" />
                             if ( r.name.search("ID") > -1 ) socket.id = r.value;
                             else cookies[r.name] = r.value;
                         }
-                    
+                        
+                        geocoder = L.control.geocoder(cookies['GeocoderKEY'],{
+                            params: {
+                                countrycodes: 'EC'
+                            },
+                            focus: true,
+                            markers: false,
+                            placeholder: "Busca tu punto de referencia...",
+                            expanded: true,
+                            panToPoint: true,
+                            fullWidth: false
+                        }).addTo(map);
+                        geocoder._reset.innerHTML = "<b>&#8676;</b>";
+                        infoMapBtn.addTo(map).setPosition('topleft');
+                        resetViewBtn.addTo(map).setPosition('topleft');
                         esriWorldImageryLayers = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
                             attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
                             minZoom: 2,
@@ -410,9 +424,15 @@ Mirarnos en el espejo de NarColombia" />
                 loading.hidden = false;
             };
             
+            const onEval = (e) => {
+                if (debugging) console.log("EVAL\n",e);
+                
+            };
+            
             function addLayers(live = false) {
                 // layerControl.addOverlay(customControl, "C&oacute;digo QR");
                 customControl.addTo(map);
+                if ( customControl.getContainer() != undefined ) customControl.getContainer().appendChild(gte);
                 if ( live ) {
                     layerControl.addOverlay(livePos, "Tu posici&oacute;n actual");
                 }
@@ -444,7 +464,10 @@ Mirarnos en el espejo de NarColombia" />
                 info.hidden = false;
                 infoTriggered = true;
                 if ( infoScale >= 1 ) infoClosing = true;
-                if ( infoScale <= 0 ) infoOpening = true;
+                if ( infoScale <= 0 ) {
+                  infoOpening = true;
+                  info.appendChild(gte);
+                }
             }
             
             const geoOk = (pos) => {
@@ -485,7 +508,9 @@ Mirarnos en el espejo de NarColombia" />
             function sendForm() {
                 loading.hidden = false;
                 try {
-                    socket.send(JSON.stringify(["addPoint",`${document.getElementById("pointName").value},${clickMarker.getLatLng().lat},${clickMarker.getLatLng().lng},${document.getElementById("pointNationality").value},${" "}\n`]));
+                    let pinfo = `${document.getElementById("pointName").value},${clickMarker.getLatLng().lat},${clickMarker.getLatLng().lng},${document.getElementById("pointNationality").value},${(document.getElementById("pointYear").value != '' ) ? document.getElementById("pointYear").value : ' '}\n`;
+                    if ( debugging ) console.log(pinfo);
+                    socket.send(JSON.stringify(["addPoint",pinfo]));
                     addPointForm.innerHTML = pointForm;
                     clickPopup = addPointBtn;
                     clickMarker.closePopup();
@@ -518,11 +543,13 @@ Mirarnos en el espejo de NarColombia" />
             addPointForm.id = "addPointForm";
             addPointForm.action = '';
             const pointForm = `
-                <label for=\"name\">Nombre: </label><br />
-                <input type=\"text\" name=\"Name\" id=\"pointName\" placeholder=\"Nombre o An&oacute;nimo\" required /><br />
-                <label for=\"nationality\">Nacionalidad: </label><br />
-                <input type=\"text\" name=\"Nationality\" id=\"pointNationality\" placeholder=\"Ciudad o pa&iacute;s\" required /><br />
-                <input type=\"submit\" id=\"pointSubmit\" value=\"A&ntilde;adir Punto\" formaction=\"javascript:sendForm()\"/>`
+                <label class=\"pointFormElm\" for=\"pointName\">Nombre: </label><br />
+                <input class=\"pointFormElm\" type=\"text\" name=\"Name\" id=\"pointName\" placeholder=\"Nombre o An&oacute;nimo\" required /><br />
+                <label class=\"pointFormElm\" for=\"pointNationality\">Nacionalidad: </label><br />
+                <input class=\"pointFormElm\" type=\"text\" name=\"Nationality\" id=\"pointNationality\" placeholder=\"Ciudad o pa&iacute;s\" required /><br />
+                <label class=\"pointFormElm\" for=\"pointYear\">Año: </label><br />
+                <input class=\"pointFormElm\" type=\"number\" name=\"Year\" id=\"pointYear\" placeholder=\"YYYY (Opcional)\" min=\"1920\" max=\"2024\" /><br />
+                <input class=\"pointFormElm\" type=\"submit\" id=\"pointSubmit\" value=\"A&ntilde;adir Punto\" formaction=\"javascript:sendForm()\"/>`
             addPointForm.innerHTML = pointForm;            
             socket.addEventListener('message', onMessage);
             socket.addEventListener('open', onOpen);
@@ -559,8 +586,10 @@ Mirarnos en el espejo de NarColombia" />
                         toggleInfo();
                         infoClosing = false;
                         infoTriggered = false;
+                        if ( customControl.getContainer() != undefined ) customControl.getContainer().appendChild(gte);
                     }
                 }
+                if ( document.getElementById(':1.container') != null ) map.getContainer().style.height = `calc(100% - ${document.getElementById(':1.container').clientHeight}px)`;
                 liveUpdateID = requestAnimationFrame(liveUpdate);
             };
             if ( !isFirefox ) {

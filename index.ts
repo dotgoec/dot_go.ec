@@ -24,6 +24,7 @@ const wss = Bun.serve({
       cookies.append("Set-Cookie",`jawgKey=${process.env.JAWG_KEY}`);
       cookies.append("Set-Cookie",`stadiaKey=${process.env.STADIA_KEY}`);
       cookies.append("Set-Cookie",`mapTilerKey=${process.env.MAPTILER_KEY}`);
+      cookies.append("Set-Cookie",`GeocoderKEY=${process.env.GEOCODER_KEY}`);
       if (server.upgrade(req, {
         headers: cookies,
       })) {
