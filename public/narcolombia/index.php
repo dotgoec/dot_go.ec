@@ -256,7 +256,7 @@ Mirarnos en el espejo de NarColombia" />
                     margin: '10px',
                     padding: '0',
                     cursor: 'pointer',
-                    width: '20%'
+                    width: '25%'
                 },
                 // datas   :
                 // {
