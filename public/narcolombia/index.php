@@ -149,10 +149,10 @@ Mirarnos en el espejo de NarColombia" />
         <div id="info" style="z-index: 10;">
             <div id="infoText">
                 <hr />
-                <h1 style="font-style: italic;">Mirarnos en el espejo de NarColombia</h1>
+                <h1 style="font-style: italic;">En cualquier parte de Guayaquil roban...</h1>
+                <h2>Cartograf&iacute;as de robos urbanos en Guayaquil</h2>
                 <hr />
-                <h2>En cualquier parte de Guayaquil roban?</h2>
-                <h3>Cartograf&iacute;as de robos urbanos en Guayaquil</h3>
+                <h3>DOT_GO</h3>
                 <hr />
                 <span id="description" hidden>
                 </span>
@@ -162,7 +162,7 @@ Mirarnos en el espejo de NarColombia" />
                         <li>Busca un lugar de referencia del sitio donde te han robado (centro comercial, hospital, parque, etc)</li>
                         <li>Con el pin azul, a&ntilde;ade el punto con los datos que te solicitan (puedes arrastrar el pin azul o solo tocar o dar click en el mapa para moverlo)</li>
                         <li>Dale click a "A&ntilde;adir Punto" una vez hayas llenado los datos*</li>
-                        <li>Despu&eacute;s de colocar el punto, puedes decidir si contar tu experiencia o no a nuestro <a href="https://t.me/dotgoec_bot" target="_blank">Bot de Telegram</a> o en el micr&oacute;fono en la muestra.</li>
+                        <li>Despu&eacute;s de colocar el punto, puedes decidir si contar tu experiencia o no a nuestro <a href="https://t.me/dotgoec_bot" target="_blank">Bot de Telegram</a>.</li>
                         <li>Puedes observar los otros puntos y los nombres de las dem&aacute;s personas</li>
                     </ol><br />
                     <span class="asterisk">*&nbsp;Puedes colocar tu nombre o pseu&oacute;nimo, o simplemente "An&oacute;nimo" si tienes miedo, preocupaci&oacute;n o no quieres usar tu nombre.</span><br />
@@ -216,7 +216,7 @@ Mirarnos en el espejo de NarColombia" />
             var clickMarker = L.marker(defaultLatLng).bindPopup(clickPopup, {
                 minWidth: 150
             }).addTo(map).removeFrom(map);
-            var points = [], pointsGroup = ( location.search.search('cluster') > 0 ? L.markerClusterGroup() : L.layerGroup() ), layerControl = L.control.layers().addTo(map);
+            var points = [], pointsGroup = ( location.search.search('expo') > 0 ? L.layerGroup() : L.markerClusterGroup() ), layerControl = L.control.layers().addTo(map);
             var geocoder;
             var infoMapBtn = L.easyButton('&#9776;',(b,m) => {
                 if ( debugging ) console.log(b,m);
@@ -429,17 +429,18 @@ Mirarnos en el espejo de NarColombia" />
             };
             
             function addLayers(live = false) {
-                // layerControl.addOverlay(customControl, "C&oacute;digo QR");
-                customControl.addTo(map);
                 if ( customControl.getContainer() != undefined ) customControl.getContainer().appendChild(gte);
                 if ( live ) {
                     layerControl.addOverlay(livePos, "Tu posici&oacute;n actual");
                 }
-                layerControl.addOverlay(pointsGroup, "Puntos de usuarios");
+                // layerControl.addOverlay(customControl, "C&oacute;digo QR");
+                customControl.addTo(map);
+                layerControl.addOverlay(pointsGroup, "Puntos de robos");
                 pointsGroup.addTo(map);
-                layerControl.addOverlay(clickMarker, "Nuevo punto");
+                layerControl.addOverlay(clickMarker, "Nuevo punto de robo");
                 clickMarker.addTo(map).dragging.enable();
-                // layerControl.expand();
+                clickMarker.remove();
+                layerControl.expand();
                 geocoder.on('select', (e) => {
                   if ( debugging ) console.log(e);
                   map.flyTo(e.latlng, 18);
@@ -518,6 +519,7 @@ Mirarnos en el espejo de NarColombia" />
                     loading.hidden = true;
                     if ( liveLatLng === undefined ) clickMarker.setLatLng(defaultLatLng);
                     else clickMarker.setLatLng(liveLatLng);
+                    map.flyTo(centeredLatLng, 12);
                 } catch(err) {
                     if ( debugging ) console.error(err);
                     setTimeout(sendForm,1000);
@@ -548,7 +550,7 @@ Mirarnos en el espejo de NarColombia" />
                 <label class=\"pointformelm\" for=\"pointNationality\">Nacionalidad: </label><br />
                 <input class=\"pointformelm\" type=\"text\" name=\"Nationality\" id=\"pointNationality\" placeholder=\"Ciudad o pa&iacute;s\" required /><br />
                 <label class=\"pointformelm\" for=\"pointYear\">Año: </label><br />
-                <input class=\"pointformelm\" type=\"number\" name=\"Year\" id=\"pointYear\" placeholder=\"YYYY (Opcional)\" min=\"1920\" max=\"2024\" /><br />
+                <input class=\"pointformelm\" type=\"number\" name=\"Year\" id=\"pointYear\" placeholder=\"YYYY (Opcional)\" min=\"1980\" max=\"<? echo date("Y"); ?>\" /><br />
                 <input class=\"pointformelm\" type=\"submit\" id=\"pointSubmit\" value=\"A&ntilde;adir Punto\" formaction=\"javascript:sendForm()\"/>`
             addPointForm.innerHTML = pointForm;            
             socket.addEventListener('message', onMessage);
