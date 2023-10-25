@@ -1,10 +1,10 @@
 <html>
     <head>
-        <title>DOT_GO</title>
+        <title>Dot_go</title>
         <meta property="og:title" content="DOT_GO" />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://dotgoec.alwaysdata.net/" />
-        <meta property="og:image" content="https://dotgoec.alwaysdata.net/DotGoPix.png" />
+        <meta property="og:image" content="https://dotgoec.alwaysdata.net/DotGoRebrand.png" />
         <meta property="og:description" content="Colectivo interdisciplinar en artes y medios digitales." />
         <meta property='og:image:width' content='400' />
         <meta property='og:image:height' content='400' />
@@ -27,7 +27,7 @@
     </head>
     <body>
         <span class="center">
-            <a href="https://linktr.ee/dot_go.ec"><img src="https://dotgoec.alwaysdata.net/DotGoPix.png"/></a>
+            <a href="https://linktr.ee/dot_go.ec"><img src="https://dotgoec.alwaysdata.net/DotGoRebrand.png"/></a>
             <h3>webpage in construction...</h3>
             redirecting
         </span>

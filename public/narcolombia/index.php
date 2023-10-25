@@ -4,7 +4,7 @@
         <meta property="og:title" content="En cualquier parte de Guayaquil roban?" />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://dotgoec.alwaysdata.net/narcolombia" />
-        <meta property="og:image" content="https://dotgoec.alwaysdata.net/DotGoPix.png" />
+        <meta property="og:image" content="https://dotgoec.alwaysdata.net/DotGoRebrand.png" />
         <meta property="og:description" content="Cartografías de robos urbanos en Guayaquil. 
 Mirarnos en el espejo de NarColombia" />
         <meta property='og:image:width' content='400' />
