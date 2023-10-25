@@ -394,7 +394,7 @@ Mirarnos en el espejo de NarColombia" />
                         });
                         
                         stadiaAlidadeSatelliteLayers = L.maplibreGL({
-                            style: `https://tiles.stadiamaps.com/styles/alidade_satellite.json?api_key=${cookies['stadiaKey']}`,
+                            style: `https://tiles.stadiamaps.com/styles/alidade_satellite.json?key=${cookies['stadiaKey']}`,
                             attribution: '&copy; CNES, Distribution Airbus DS, &copy; Airbus DS, &copy; PlanetObserver (Contains Copernicus Data)'
                         });
                         
