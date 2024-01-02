@@ -316,9 +316,9 @@ Mirarnos en el espejo de NarColombia" />
                         for ( i = 0; i < msg[1].length; i++ ) {
                             const p = msg[1][i].split(',');
                             if (debugging) console.log(p);
-                            if ( p.length === 5 ) {
+                            if ( p.length === 6 ) {
                                 if ( !isNaN(p[1]) && !isNaN(p[2]) ) {
-                                    const pi = points.push(L.marker([p[1],p[2]],{icon: pinIcon}).bindPopup(`<form onsubmit=\"return false\"><button class=\"pbutton\" onclick=\"javascript:map.flyTo(new L.LatLng(${p[1]},${p[2]}), 18)\" formaction=\"\"><span class=\"pname notranslate\">${p[0]}</span><br /><span class=\"pnationality notranslate\">${p[3]}</span><br /><span class=\"pyear\">${p[4]}</span></button></form>`)) - 1;
+                                    const pi = points.push(L.marker([p[1],p[2]],{icon: pinIcon}).bindPopup(`<form onsubmit=\"return false\"><button class=\"pbutton\" onclick=\"javascript:map.flyTo(new L.LatLng(${p[1]},${p[2]}), 18)\" formaction=\"\"><span class=\"pname notranslate\">${p[0]}</span><br /><span class=\"pnationality notranslate\">${p[3]}</span><br /><span class=\"pevent\">${p[4]}</span><br /><span class=\"pcelebration\">${p[5]}</span></button></form>`)) - 1;
                                     pointsGroup.addLayer(points[pi]);
                                 }
                             }
@@ -509,9 +509,9 @@ Mirarnos en el espejo de NarColombia" />
             function sendForm() {
                 loading.hidden = false;
                 try {
-                    let pinfo = `${document.getElementById("pointName").value},${clickMarker.getLatLng().lat},${clickMarker.getLatLng().lng},${document.getElementById("pointNationality").value},${(document.getElementById("pointYear").value != '' ) ? document.getElementById("pointYear").value : ' '}\n`;
+                    let pinfo = `${document.getElementById("pointName").value},${clickMarker.getLatLng().lat},${clickMarker.getLatLng().lng},${document.getElementById("pointMatch").value},${document.getElementById("pointEvent").value},${document.getElementById("pointCelebration").value}\n`;
                     if ( debugging ) console.log(pinfo);
-                    socket.send(JSON.stringify(["addPoint","narcolombia",pinfo]));
+                    socket.send(JSON.stringify(["addPoint","bravasomosec",pinfo]));
                     addPointForm.innerHTML = pointForm;
                     clickPopup = addPointBtn;
                     clickMarker.closePopup();
@@ -549,8 +549,10 @@ Mirarnos en el espejo de NarColombia" />
                 <input class=\"pointformelm\" type=\"text\" name=\"Name\" id=\"pointName\" placeholder=\"Nombre o An&oacute;nimo\" required /><br />
                 <label class=\"pointformelm\" for=\"pointNationality\">Nacionalidad: </label><br />
                 <input class=\"pointformelm\" type=\"text\" name=\"Nationality\" id=\"pointNationality\" placeholder=\"Ciudad o pa&iacute;s\" required /><br />
-                <label class=\"pointformelm\" for=\"pointYear\">Año: </label><br />
-                <input class=\"pointformelm\" type=\"number\" name=\"Year\" id=\"pointYear\" placeholder=\"YYYY (Opcional)\" min=\"1980\" max=\"<? echo date("Y"); ?>\" /><br />
+                <label class=\"pointformelm\" for=\"pointEvent\">Etapa: </label><br />
+                <input class=\"pointformelm\" type=\"text\" name=\"Event\" id=\"pointEvent\" placeholder=\"Campeonato Nacional SubXX YYYY\" required /><br />
+                <label class=\"pointformelm\" for=\"pointCelebration\">Celebraci&oacute;n: </label><br />
+                <input class=\"pointformelm\" type=\"text\" name=\"Celebration\" id=\"pointCelebration\" placeholder=\"Fiesta, Reuni&oacute;n\" required /><br />
                 <input class=\"pointformelm\" type=\"submit\" id=\"pointSubmit\" value=\"A&ntilde;adir Punto\" formaction=\"javascript:sendForm()\"/>`
             addPointForm.innerHTML = pointForm;            
             socket.addEventListener('message', onMessage);

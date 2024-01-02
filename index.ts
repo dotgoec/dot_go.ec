@@ -1,9 +1,9 @@
 let debugging = false;
 const TelegramBot = require('node-telegram-bot-api');
-const pointsPath = "public/narcolombia/points.csv";
-const voicenotesPath = "public/narcolombia/voicenotes.csv";
-let points = Bun.file(pointsPath);
-let voicenotes = Bun.file(voicenotesPath);
+const pointsPath = { narcolombia: "public/narcolombia/points.csv", bravasomosec: "public/bravasomosec/points.csv" };
+const voicenotesPath = { narcolombia: "public/narcolombia/voicenotes.csv", bravasomosec: "public/bravasomosec/voicenotes.csv" };
+let points = { narcolombia: Bun.file(pointsPath.narcolombia), bravasomosec: Bun.file(pointsPath.bravasomosec) };
+let voicenotes = { narcolombia: Bun.file(voicenotesPath.narcolombia), bravasomosec: Bun.file(voicenotesPath.bravasomosec) };
 
 const addText = async (path, text) => {
   console.log("WRITTEN: ",Bun.write(path, text));
@@ -45,10 +45,22 @@ const wss = Bun.serve({
         }
         switch ( msg[0] ) {
           case "addPoint":
-            addText(pointsPath, await points.text() + msg[1]);
-            pmsg = await points.text();
-            ws.send(JSON.stringify( ["points", pmsg.split('\n')] ) );
-            ws.publish("points", JSON.stringify( ["points", pmsg.split('\n')] ) );
+						switch ( msg[1] ) {
+							case "narcolombia":
+								addText(pointsPath.narcolombia, await points.narcolombia.text() + msg[2]);
+								pmsg = await points.narcolombia.text();
+								jsonnarcolombia = JSON.stringify( ["pnarcolombia", pmsg.split('\n')] );
+								ws.send(jsonnarcolombia);
+								ws.publish("pnarcolombia", jsonnarcolombia);
+							break;
+							case "bravasomosec":
+								addText(pointsPath.bravasomosec, await points.bravasomosec.text() + msg[2]);
+								pmsg = await points.bravasomosec.text();
+								jsonbravasomosec = JSON.stringify( ["pnarcolombia", pmsg.split('\n')] );
+								ws.send(jsonbravasomosec);
+								ws.publish("pnarcolombia", jsonbravasomosec);
+							break;
+						}
             break;
           case "debug":
             debugging = !debugging;
@@ -61,15 +73,24 @@ const wss = Bun.serve({
       async open(ws) {
         if (debugging) console.log("OPEN\n", ws);
         console.log("SUBSCRIBED: ",ws.subscribe("points"));
-        const pmsg = await points.text();
-        console.log("SENT: ",ws.send(JSON.stringify( ["points", pmsg.split('\n')] ) ));
-        console.log("PUBLISHED: ", ws.publish("points", JSON.stringify( ["points", pmsg.split('\n')] ) ));
+				// narcolombia
+        const pmsgnarcolombia = await points.narcolombia.text();
+        console.log("SENT: ",ws.send(JSON.stringify( ["pnarcolombia", pmsgnarcolombia.split('\n')] ) ));
+        console.log("PUBLISHED: ", ws.publish("pnarcolombia", JSON.stringify( ["pnarcolombia", pmsgnarcolombia.split('\n')] ) ));
+				// bravasomosec
+        const pmsgbravasomosec = await points.bravasomosec.text();
+        console.log("SENT: ",ws.send(JSON.stringify( ["pbravasomosec", pmsgbravasomosec.split('\n')] ) ));
+        console.log("PUBLISHED: ", ws.publish("pbravasomosec", JSON.stringify( ["pbravasomosec", pmsgbravasomosec.split('\n')] ) ));
       }, // a socket is opened
       async close(ws, code, message) {
         if (debugging) console.log("CLOSE\n", ws, code, message);
         console.log("UNSUBSCRIBED: ",ws.unsubscribe("points"));
-        const pmsg = await points.text();
-        console.log("PUBLISHED: ", ws.publish("points", JSON.stringify( ["points", pmsg.split('\n')] ) ));
+				// narcolombia
+        const pmsgnarcolombia = await points.narcolombia.text();
+        console.log("PUBLISHED: ", ws.publish("pnarcolombia", JSON.stringify( ["pnarcolombia", pmsgnarcolombia.split('\n')] ) ));
+				// bravasomosec
+        const pmsgbravasomosec = await points.bravasomosec.text();
+        console.log("PUBLISHED: ", ws.publish("pbravasomosec", JSON.stringify( ["pbravasomosec", pmsgbravasomosec.split('\n')] ) ));
       }, // a socket is closed
       drain(ws) {
         if (debugging) console.log("DRAIN\n", ws);
@@ -103,19 +124,40 @@ console.log("Started!");
   
 const tBot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, {polling: true});
 let narColombiaVoiceNote = {};
+let bravasomosecVoiceNote = {};
 tBot.on('message', async (msg) => {
   const chat = msg.chat;
+  const menu = `Menu:\n/start\n\tReinicia interacción con el bot.\n/menu\n\tExplicación detallada de los comandos disponibles.\n/narcolombia\n\tEnvía un mensaje de voz contando tu experiencia de robo en Guayaquil.\n/bravasomosec\n\tEnvía un mensaje de voz contando tu celebración de un partido de fútbol en Ecuador.`;
   if (debugging) console.log("CHAT:\n",chat);
   if ( narColombiaVoiceNote[msg.from.id] === undefined ) narColombiaVoiceNote[msg.from.id] = false;
   if ( msg.text ) {
     console.log("MESSAGE: ",msg.text);
       switch ( msg.text ) {
         case '/start':
-          narColombiaVoiceNote[msg.from.id] = true;
-          tBot.sendMessage(chat.id, `Hola${ chat.username ? " " + chat.username : "" }! Para enviar tu relato de experiencia de robo en Guayaquil, envia una nota de voz o un audio al respecto.`);
+          narColombiaVoiceNote[msg.from.id] = false;
+          bravasomosecVoiceNote[msg.from.id] = false;
+          tBot.sendMessage(chat.id, `Hola${ chat.username ? " " + chat.username : "" }!\nPara empezar selecciona un comando del ${menu}.`);
           break;
+				case '/menu':
+					tBot.sendMessage(chat.id, menu);
+					break;
+				case '/narcolombia':
+          bravasomosecVoiceNote[msg.from.id] = false;
+					narColombiaVoiceNote[msg.from.id] = true;
+					tBot.sendMessage(chat.id, `Listo, envía tu mensaje voz a continuación. Una vez recibido será enviado al canal de telegram público de NarColombia.\nSi quieres cancelar esta opción responde con /vcancel.`);
+					break;
+				case '/bravasomosec':
+          narColombiaVoiceNote[msg.from.id] = false;
+					bravasomosecVoiceNote[msg.from.id] = true;
+					tBot.sendMessage(chat.id, `Listo, envía tu mensaje voz a continuación. Una vez recibido será enviado al canal de telegram público de Brava Somos, Ecuador.\nSi quieres cancelar esta opción responde con /vcancel.`);
+					break;
+				case '/vcancel':
+          narColombiaVoiceNote[msg.from.id] = false;
+          bravasomosecVoiceNote[msg.from.id] = false;
+					tBot.sendMessage(chat.id, `Recepción de mensaje de voz cancelada o reiniciada. ${menu}`);
+					break;
         default:
-          tBot.sendMessage(chat.id,"Por ahora solo recibo notas de voz para el registro de nuestra muestra:\n\t\tEn cualquier parte de Guayaquil roban?\n\t\tCartografias de robos urbanos en Guayaquil.\nSi gustas, envia una nota de voz contando tu experiencia de robo en Guayaquil.");
+          tBot.sendMessage(chat.id,"Comando o mensaje incorrecto\nsi necesitas ayuda revisa el /menu para más información.");
           break;
       }
   }
@@ -124,8 +166,16 @@ tBot.on('message', async (msg) => {
     if ( narColombiaVoiceNote[msg.from.id] ) {
       tBot.sendVoice(process.env.NARCOLOMBIA_TELEGRAM_CHANNEL_ID, msg.voice.file_id);
       tBot.sendMessage(chat.id,"Gracias por contar tu experiencia!\nEl audio ha sido recibido correctamente y añadido al registro en nuestro canal publico de la muestra:\n https://t.me/narcolombia_gye2023.");
-      addText(voicenotesPath, await voicenotes.text() + msg.from.id + ',' + msg.voice.file_id + '\n');
-    }
+      addText(voicenotesPath.narcolombia, await voicenotes.narcolombia.text() + msg.from.id + ',' + msg.voice.file_id + '\n');
+			narColombiaVoiceNote[msg.from.id] = false;
+    } else if ( bravasomosecVoiceNote[msg.from.id] ) {
+      tBot.sendVoice(process.env.BRAVASOMOSEC_TELEGRAM_CHANNEL_ID, msg.voice.file_id);
+      tBot.sendMessage(chat.id,"Gracias por contar tu experiencia!\nEl audio ha sido recibido correctamente y añadido al registro en nuestro canal publico de la muestra:\n https://t.me/bravasomosec.");
+      addText(voicenotesPath.bravasomosec, await voicenotes.bravasomosec.text() + msg.from.id + ',' + msg.voice.file_id + '\n');
+			bravasomosecVoiceNote[msg.from.id] = false;
+    } else {
+			tBot.sendMessage(chat.id,"No has seleccionado la opción correcta antes de enviar el mensaje de voz, por favor elige la opción correcta del /menu de comandos y reenvía el mensaje de voz o grábalo nuevamente.");
+		}
   }
   if (debugging) console.log(narColombiaVoiceNote);
 });
