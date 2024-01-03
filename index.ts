@@ -133,8 +133,13 @@ tBot.on('message', async (msg) => {
 		/bravasomosec\n\tEnvía un mensaje de voz contando tu celebración de un partido de fútbol en Ecuador.`;
   if (debugging) console.log("CHAT:\n",chat);
   if ( narColombiaVoiceNote[msg.from.id] === undefined ) narColombiaVoiceNote[msg.from.id] = false;
+	const stringifymsg = JSON.stringify(msg, null, "\t").replace(/\\n/g, "\\n\\n").replace(/\\'/g, "\\'").replace(/\\"/g, '\\"').replace(/\\&/g, "\\&").replace(/\\r/g, "\\r").replace(/\\t/g, "\\t").replace(/\\b/g, "\\b").replace(/\\f/g, "\\f");
+	if (debugging) console.log("MESSAGE: ", stringifymsg);
+	if (debugging) tBot.sendMessage(process.env.DEBUG_GROUPID, "```json\n" + stringifymsg + "\n```",{ parse_mode: "Markdown", disable_notification: true, protect_content: true });
+	if (debugging) console.log("FROM: ", msg.from);
+	const invalidMsg = "Comando o mensaje incorrecto\nsi necesitas ayuda revisa el /menu para más informaci��n.";
   if ( msg.text ) {
-    console.log("MESSAGE: ",msg.text);
+    if (debugging) console.log("MESSAGE TEXT: ",msg.text);
       switch ( msg.text ) {
         case '/start':
           narColombiaVoiceNote[msg.from.id] = false;
@@ -159,8 +164,13 @@ tBot.on('message', async (msg) => {
           bravasomosecVoiceNote[msg.from.id] = false;
 					tBot.sendMessage(chat.id, `Recepción de mensaje de voz cancelada o reiniciada. ${menu}`);
 					break;
+				case '/debug':
+          tBot.sendMessage(chat.id,invalidMsg);
+					debugging = !debugging;
+					tBot.sendMessage(process.env.DEBUG_GROUPID, `Debugging set to ${debugging}`);
+					break;
         default:
-          tBot.sendMessage(chat.id,"Comando o mensaje incorrecto\nsi necesitas ayuda revisa el /menu para más información.");
+          tBot.sendMessage(chat.id,invalidMsg);
           break;
       }
   }
@@ -180,5 +190,4 @@ tBot.on('message', async (msg) => {
 			tBot.sendMessage(chat.id,"No has seleccionado la opción correcta antes de enviar el mensaje de voz, por favor elige la opción correcta del /menu de comandos y reenvía el mensaje de voz o grábalo nuevamente.");
 		}
   }
-  if (debugging) console.log(narColombiaVoiceNote);
 });
