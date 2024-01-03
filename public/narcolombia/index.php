@@ -310,7 +310,7 @@ Mirarnos en el espejo de NarColombia" />
                 }
                 if (debugging) console.log("NEW MESSAGE:\n",msg);
                 switch (msg[0]) {
-                    case "points":
+                    case "pnarcolombia":
                         points = [];
                         pointsGroup.clearLayers();
                         for ( i = 0; i < msg[1].length; i++ ) {

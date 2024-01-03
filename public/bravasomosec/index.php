@@ -1,12 +1,11 @@
 <html>
     <head>
         <title>NarColombia</title>
-        <meta property="og:title" content="En cualquier parte de Guayaquil roban?" />
+        <meta property="og:title" content="Brava Somos, Ecuador" />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://dotgoec.alwaysdata.net/narcolombia" />
+        <meta property="og:url" content="https://dotgoec.alwaysdata.net/bravasomosec" />
         <meta property="og:image" content="https://dotgoec.alwaysdata.net/DotGoRebrand.png" />
-        <meta property="og:description" content="Cartografías de robos urbanos en Guayaquil. 
-Mirarnos en el espejo de NarColombia" />
+        <meta property="og:description" content="Una propuesta intermedial de registro de celebraciones del fútbol." />
         <meta property='og:image:width' content='400' />
         <meta property='og:image:height' content='400' />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
@@ -55,7 +54,7 @@ Mirarnos en el espejo de NarColombia" />
                 color: cornflowerblue;
             }
             #addPointForm {
-                width: 100%;
+                min-width: 200px;
                 text-align: center;
             }
             .pointformelm {
@@ -66,7 +65,13 @@ Mirarnos en el espejo de NarColombia" />
                 font-weight: bold;
                 text-align: center;
             }
-            .pnationality {
+            .pplace {
+                text-align: center;
+            }
+            .pmatch {
+                text-align: center;
+            }
+            .pleague {
                 text-align: center;
             }
             #info, #loading {
@@ -149,23 +154,21 @@ Mirarnos en el espejo de NarColombia" />
         <div id="info" style="z-index: 10;">
             <div id="infoText">
                 <hr />
-                <h1 style="font-style: italic;">En cualquier parte de Guayaquil roban...</h1>
-                <h2>Cartograf&iacute;as de robos urbanos en Guayaquil</h2>
+                <h1 style="font-style: italic;">BRAVA SOMOS, ECUADOR</h1>
                 <hr />
-                <h3>DOT_GO</h3>
+                <h2>DOT_GO</h2>
                 <hr />
                 <span id="description" hidden>
                 </span>
                 <span id="instructions">
-                    <h4>Instrucciones de la muestra</h4>
+                    <h3>Instrucciones de la muestra</h3>
                     <ol type="1">
-                        <li>Busca un lugar de referencia del sitio donde te han robado (centro comercial, hospital, parque, etc)</li>
+                        <li>Busca un lugar de referencia del sitio donde has celebrado un partido de fútbol (centro comercial, hospital, parque, etc)</li>
                         <li>Con el pin azul, a&ntilde;ade el punto con los datos que te solicitan (puedes arrastrar el pin azul o solo tocar o dar click en el mapa para moverlo)</li>
-                        <li>Dale click a "A&ntilde;adir Punto" una vez hayas llenado los datos*</li>
-                        <li>Despu&eacute;s de colocar el punto, puedes decidir si contar tu experiencia o no a nuestro <a href="https://t.me/dotgoec_bot" target="_blank">Bot de Telegram</a>.</li>
+                        <li>Dale click a "A&ntilde;adir Punto" una vez hayas llenado los datos</li>
+                        <li>Despu&eacute;s de colocar el punto, cuenta tu experiencia a nuestro <a href="https://t.me/dotgoec_bot" target="_blank">Bot de Telegram</a>.</li>
                         <li>Puedes observar los otros puntos y los nombres de las dem&aacute;s personas</li>
                     </ol><br />
-                    <span class="asterisk">*&nbsp;Puedes colocar tu nombre o pseu&oacute;nimo, o simplemente "An&oacute;nimo" si tienes miedo, preocupaci&oacute;n o no quieres usar tu nombre.</span><br />
                 </span>
                 <hr />
                 <button id="infobtn" onclick="infoToggle()">Cerrar</button>
@@ -249,7 +252,7 @@ Mirarnos en el espejo de NarColombia" />
             );
             var customControl = L.control.custom({
                 position: 'bottomleft',
-                content : 'Escanea el QR para escuchar las experiencias:<br><a href="https://t.me/narcolombia_gye2023" target="_blank" title="Canal de Telegram" ><img class="qrcode" src="telegram_qrcode.jpeg"></a>',
+                content : 'Escanea el QR para escuchar las experiencias:<br><a href="https://t.me/bravasomosec" target="_blank" title="Canal de Telegram" ><img class="qrcode" src="telegram_qrcode.jpg"></a>',
                 // classes : 'qrcode',
                 style   :
                 {
@@ -310,7 +313,7 @@ Mirarnos en el espejo de NarColombia" />
                 }
                 if (debugging) console.log("NEW MESSAGE:\n",msg);
                 switch (msg[0]) {
-                    case "points":
+                    case "pbravasomosec":
                         points = [];
                         pointsGroup.clearLayers();
                         for ( i = 0; i < msg[1].length; i++ ) {
@@ -318,7 +321,7 @@ Mirarnos en el espejo de NarColombia" />
                             if (debugging) console.log(p);
                             if ( p.length === 6 ) {
                                 if ( !isNaN(p[1]) && !isNaN(p[2]) ) {
-                                    const pi = points.push(L.marker([p[1],p[2]],{icon: pinIcon}).bindPopup(`<form onsubmit=\"return false\"><button class=\"pbutton\" onclick=\"javascript:map.flyTo(new L.LatLng(${p[1]},${p[2]}), 18)\" formaction=\"\"><span class=\"pname notranslate\">${p[0]}</span><br /><span class=\"pnationality notranslate\">${p[3]}</span><br /><span class=\"pevent\">${p[4]}</span><br /><span class=\"pcelebration\">${p[5]}</span></button></form>`)) - 1;
+                                    const pi = points.push(L.marker([p[1],p[2]],{icon: pinIcon}).bindPopup(`<form onsubmit=\"return false\"><button class=\"pbutton\" onclick=\"javascript:map.flyTo(new L.LatLng(${p[1]},${p[2]}), 18)\" formaction=\"\"><span class=\"pname notranslate\">${p[0]}</span><br /><span class=\"pplace\">${p[3]}</span><br /><span class=\"pmatch\">${p[4]}</span><br /><span class=\"pleague\">${p[5]}</span></button></form>`)) - 1;
                                     pointsGroup.addLayer(points[pi]);
                                 }
                             }
@@ -439,7 +442,7 @@ Mirarnos en el espejo de NarColombia" />
                 pointsGroup.addTo(map);
                 layerControl.addOverlay(clickMarker, "Nuevo punto de robo");
                 clickMarker.addTo(map).dragging.enable();
-                clickMarker.remove();
+                // clickMarker.remove();
                 layerControl.expand();
                 geocoder.on('select', (e) => {
                   if ( debugging ) console.log(e);
@@ -509,7 +512,7 @@ Mirarnos en el espejo de NarColombia" />
             function sendForm() {
                 loading.hidden = false;
                 try {
-                    let pinfo = `${document.getElementById("pointName").value},${clickMarker.getLatLng().lat},${clickMarker.getLatLng().lng},${document.getElementById("pointMatch").value},${document.getElementById("pointEvent").value},${document.getElementById("pointCelebration").value}\n`;
+                    let pinfo = `${document.getElementById("pointName").value},${clickMarker.getLatLng().lat},${clickMarker.getLatLng().lng},${document.getElementById("pointPlace").value},${document.getElementById("pointMatch").value},${document.getElementById("pointLeague").value}\n`;
                     if ( debugging ) console.log(pinfo);
                     socket.send(JSON.stringify(["addPoint","bravasomosec",pinfo]));
                     addPointForm.innerHTML = pointForm;
@@ -546,13 +549,13 @@ Mirarnos en el espejo de NarColombia" />
             addPointForm.action = '';
             const pointForm = `
                 <label class=\"pointformelm\" for=\"pointName\">Nombre: </label><br />
-                <input class=\"pointformelm\" type=\"text\" name=\"Name\" id=\"pointName\" placeholder=\"Nombre o An&oacute;nimo\" required /><br />
-                <label class=\"pointformelm\" for=\"pointNationality\">Nacionalidad: </label><br />
-                <input class=\"pointformelm\" type=\"text\" name=\"Nationality\" id=\"pointNationality\" placeholder=\"Ciudad o pa&iacute;s\" required /><br />
-                <label class=\"pointformelm\" for=\"pointEvent\">Etapa: </label><br />
-                <input class=\"pointformelm\" type=\"text\" name=\"Event\" id=\"pointEvent\" placeholder=\"Campeonato Nacional SubXX YYYY\" required /><br />
-                <label class=\"pointformelm\" for=\"pointCelebration\">Celebraci&oacute;n: </label><br />
-                <input class=\"pointformelm\" type=\"text\" name=\"Celebration\" id=\"pointCelebration\" placeholder=\"Fiesta, Reuni&oacute;n\" required /><br />
+                <input class=\"pointformelm\" type=\"text\" name=\"Name\" id=\"pointName\" placeholder=\"Nombre o Apodo\" required /><br />
+                <label class=\"pointformelm\" for=\"pointPlace\">Lugar: </label><br />
+                <input class=\"pointformelm\" type=\"text\" name=\"Place\" id=\"pointPlace\" placeholder=\"Casa de un amigo, Bar, etc.\" required /><br />
+                <label class=\"pointformelm\" for=\"pointMatch\">Partido: </label><br />
+                <input class=\"pointformelm\" type=\"text\" name=\"Match\" id=\"pointMatch\" placeholder=\"Ecuador vs Argentina\" required /><br />
+                <label class=\"pointformelm\" for=\"pointLeague\">Liga o Torneo: </label><br />
+                <input class=\"pointformelm\" type=\"text\" name=\"League\" id=\"pointLeague\" placeholder=\"Copa Am&eacute;rica 2021\" required /><br />
                 <input class=\"pointformelm\" type=\"submit\" id=\"pointSubmit\" value=\"A&ntilde;adir Punto\" formaction=\"javascript:sendForm()\"/>`
             addPointForm.innerHTML = pointForm;            
             socket.addEventListener('message', onMessage);

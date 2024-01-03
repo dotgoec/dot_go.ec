@@ -56,9 +56,9 @@ const wss = Bun.serve({
 							case "bravasomosec":
 								addText(pointsPath.bravasomosec, await points.bravasomosec.text() + msg[2]);
 								pmsg = await points.bravasomosec.text();
-								jsonbravasomosec = JSON.stringify( ["pnarcolombia", pmsg.split('\n')] );
+								jsonbravasomosec = JSON.stringify( ["pbravasomosec", pmsg.split('\n')] );
 								ws.send(jsonbravasomosec);
-								ws.publish("pnarcolombia", jsonbravasomosec);
+								ws.publish("pbravasomosec", jsonbravasomosec);
 							break;
 						}
             break;
@@ -127,7 +127,10 @@ let narColombiaVoiceNote = {};
 let bravasomosecVoiceNote = {};
 tBot.on('message', async (msg) => {
   const chat = msg.chat;
-  const menu = `Menu:\n/start\n\tReinicia interacción con el bot.\n/menu\n\tExplicación detallada de los comandos disponibles.\n/narcolombia\n\tEnvía un mensaje de voz contando tu experiencia de robo en Guayaquil.\n/bravasomosec\n\tEnvía un mensaje de voz contando tu celebración de un partido de fútbol en Ecuador.`;
+  const menu = `Menu:\n
+		/start\n\tReinicia la interacción con el bot.\n
+		/narcolombia\n\tEnvía un mensaje de voz contando tu experiencia de robo en Guayaquil.\n
+		/bravasomosec\n\tEnvía un mensaje de voz contando tu celebración de un partido de fútbol en Ecuador.`;
   if (debugging) console.log("CHAT:\n",chat);
   if ( narColombiaVoiceNote[msg.from.id] === undefined ) narColombiaVoiceNote[msg.from.id] = false;
   if ( msg.text ) {
@@ -136,7 +139,7 @@ tBot.on('message', async (msg) => {
         case '/start':
           narColombiaVoiceNote[msg.from.id] = false;
           bravasomosecVoiceNote[msg.from.id] = false;
-          tBot.sendMessage(chat.id, `Hola${ chat.username ? " " + chat.username : "" }!\nPara empezar selecciona un comando del ${menu}.`);
+          tBot.sendMessage(chat.id, `Hola${ chat.username ? " " + chat.username : "" }!\nPara empezar selecciona un comando dándole click del ${menu}.`);
           break;
 				case '/menu':
 					tBot.sendMessage(chat.id, menu);
@@ -165,12 +168,12 @@ tBot.on('message', async (msg) => {
     if (debugging) console.log("VOICE NOTE:\n",msg.voice);
     if ( narColombiaVoiceNote[msg.from.id] ) {
       tBot.sendVoice(process.env.NARCOLOMBIA_TELEGRAM_CHANNEL_ID, msg.voice.file_id);
-      tBot.sendMessage(chat.id,"Gracias por contar tu experiencia!\nEl audio ha sido recibido correctamente y añadido al registro en nuestro canal publico de la muestra:\n https://t.me/narcolombia_gye2023.");
+      tBot.sendMessage(chat.id,"Gracias por compartir tu experiencia!\nEl audio ha sido recibido correctamente y añadido al registro en nuestro canal publico de la muestra:\n https://t.me/narcolombia_gye2023.");
       addText(voicenotesPath.narcolombia, await voicenotes.narcolombia.text() + msg.from.id + ',' + msg.voice.file_id + '\n');
 			narColombiaVoiceNote[msg.from.id] = false;
     } else if ( bravasomosecVoiceNote[msg.from.id] ) {
       tBot.sendVoice(process.env.BRAVASOMOSEC_TELEGRAM_CHANNEL_ID, msg.voice.file_id);
-      tBot.sendMessage(chat.id,"Gracias por contar tu experiencia!\nEl audio ha sido recibido correctamente y añadido al registro en nuestro canal publico de la muestra:\n https://t.me/bravasomosec.");
+      tBot.sendMessage(chat.id,"Gracias por compartir tu experiencia!\nEl audio ha sido recibido correctamente y añadido al registro en nuestro canal publico de la muestra:\n https://t.me/bravasomosec.");
       addText(voicenotesPath.bravasomosec, await voicenotes.bravasomosec.text() + msg.from.id + ',' + msg.voice.file_id + '\n');
 			bravasomosecVoiceNote[msg.from.id] = false;
     } else {
