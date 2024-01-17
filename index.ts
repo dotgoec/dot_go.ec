@@ -129,15 +129,15 @@ tBot.on('message', async (msg) => {
   const chat = msg.chat;
   const menu = `Menu:\n
 		/start\n\tReinicia la interacci贸n con el bot.\n
-		/narcolombia\n\tEnv铆a un mensaje de voz contando tu experiencia de robo en Guayaquil.\n
-		/bravasomosec\n\tEnv铆a un mensaje de voz contando tu celebraci贸n de un partido de f煤tbol en Ecuador.`;
+		/narcolombia\n\tEnvía un mensaje de voz contando tu experiencia de robo en Guayaquil.\n
+		/bravasomosec\n\tEnvía un mensaje de voz contando tu celebraci贸n de un partido de f煤tbol en Ecuador.`;
   if (debugging) console.log("CHAT:\n",chat);
   if ( narColombiaVoiceNote[msg.from.id] === undefined ) narColombiaVoiceNote[msg.from.id] = false;
 	const stringifymsg = JSON.stringify(msg, null, "\t").replace(/\\n/g, "\\n\\n").replace(/\\'/g, "\\'").replace(/\\"/g, '\\"').replace(/\\&/g, "\\&").replace(/\\r/g, "\\r").replace(/\\t/g, "\\t").replace(/\\b/g, "\\b").replace(/\\f/g, "\\f");
 	if (debugging) console.log("MESSAGE: ", stringifymsg);
 	if (debugging) tBot.sendMessage(process.env.DEBUG_GROUPID, "```json\n" + stringifymsg + "\n```",{ parse_mode: "Markdown", disable_notification: true, protect_content: true });
 	if (debugging) console.log("FROM: ", msg.from);
-	const invalidMsg = "Comando o mensaje incorrecto\nsi necesitas ayuda revisa el /menu para m谩s información.";
+	const invalidMsg = "Comando o mensaje incorrecto\nsi necesitas ayuda revisa el /menu para más información.";
   if ( msg.text ) {
     if (debugging) console.log("MESSAGE TEXT: ",msg.text);
       switch ( msg.text ) {
@@ -152,17 +152,17 @@ tBot.on('message', async (msg) => {
 				case '/narcolombia':
           bravasomosecVoiceNote[msg.from.id] = false;
 					narColombiaVoiceNote[msg.from.id] = true;
-					tBot.sendMessage(chat.id, `Listo, env铆a tu mensaje voz a continuaci贸n. Una vez recibido ser谩 enviado al canal de telegram p煤blico de NarColombia.\nSi quieres cancelar esta opci贸n responde con /vcancel.`);
+					tBot.sendMessage(chat.id, `Listo, envía tu mensaje voz a continuaci贸n. Una vez recibido será enviado al canal de telegram público de NarColombia.\nSi quieres cancelar esta opción responde con /vcancel.`);
 					break;
 				case '/bravasomosec':
           narColombiaVoiceNote[msg.from.id] = false;
 					bravasomosecVoiceNote[msg.from.id] = true;
-					tBot.sendMessage(chat.id, `Listo, env铆a tu mensaje voz a continuaci贸n. Una vez recibido ser谩 enviado al canal de telegram p煤blico de Brava Somos, Ecuador.\nSi quieres cancelar esta opci贸n responde con /vcancel.`);
+					tBot.sendMessage(chat.id, `Listo, envía tu mensaje voz a continuaci贸n. Una vez recibido será enviado al canal de telegram público de Brava Somos, Ecuador.\nSi quieres cancelar esta opción responde con /vcancel.`);
 					break;
 				case '/vcancel':
           narColombiaVoiceNote[msg.from.id] = false;
           bravasomosecVoiceNote[msg.from.id] = false;
-					tBot.sendMessage(chat.id, `Recepci贸n de mensaje de voz cancelada o reiniciada. ${menu}`);
+					tBot.sendMessage(chat.id, `Recepción de mensaje de voz cancelada o reiniciada. ${menu}`);
 					break;
 				case '/debug':
           tBot.sendMessage(chat.id,invalidMsg);
@@ -178,16 +178,16 @@ tBot.on('message', async (msg) => {
     if (debugging) console.log("VOICE NOTE:\n",msg.voice);
     if ( narColombiaVoiceNote[msg.from.id] ) {
       tBot.sendVoice(process.env.NARCOLOMBIA_TELEGRAM_CHANNEL_ID, msg.voice.file_id);
-      tBot.sendMessage(chat.id,"Gracias por compartir tu experiencia!\nEl audio ha sido recibido correctamente y a帽adido al registro en nuestro canal publico de la muestra:\n https://t.me/narcolombia_gye2023.");
+      tBot.sendMessage(chat.id,"Gracias por compartir tu experiencia!\nEl audio ha sido recibido correctamente y a?adido al registro en nuestro canal publico de la muestra:\n https://t.me/narcolombia_gye2023.");
       addText(voicenotesPath.narcolombia, await voicenotes.narcolombia.text() + msg.from.id + ',' + msg.voice.file_id + '\n');
 			narColombiaVoiceNote[msg.from.id] = false;
     } else if ( bravasomosecVoiceNote[msg.from.id] ) {
       tBot.sendVoice(process.env.BRAVASOMOSEC_TELEGRAM_CHANNEL_ID, msg.voice.file_id);
-      tBot.sendMessage(chat.id,"Gracias por compartir tu experiencia!\nEl audio ha sido recibido correctamente y a帽adido al registro en nuestro canal publico de la muestra:\n https://t.me/bravasomosec.");
+      tBot.sendMessage(chat.id,"Gracias por compartir tu experiencia!\nEl audio ha sido recibido correctamente y a?adido al registro en nuestro canal publico de la muestra:\n https://t.me/bravasomosec.");
       addText(voicenotesPath.bravasomosec, await voicenotes.bravasomosec.text() + msg.from.id + ',' + msg.voice.file_id + '\n');
 			bravasomosecVoiceNote[msg.from.id] = false;
     } else {
-			tBot.sendMessage(chat.id,"No has seleccionado la opci贸n correcta antes de enviar el mensaje de voz, por favor elige la opci贸n correcta del /menu de comandos y reenv铆a el mensaje de voz o gr谩balo nuevamente.");
+			tBot.sendMessage(chat.id,"No has seleccionado la opción correcta antes de enviar el mensaje de voz, por favor elige la opción correcta del /menu de comandos y reenvía el mensaje de voz o grábalo nuevamente.");
 		}
   }
 });

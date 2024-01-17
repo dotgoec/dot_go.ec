@@ -4,7 +4,7 @@
         <meta property="og:title" content="Brava Somos, Ecuador" />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://dotgoec.alwaysdata.net/bravasomosec" />
-        <meta property="og:image" content="https://dotgoec.alwaysdata.net/DotGoRebrand.png" />
+        <meta property="og:image" content="https://dotgoec.alwaysdata.net/bravasomosec/BSEC.jpg" />
         <meta property="og:description" content="Una propuesta intermedial de registro de celebraciones del fútbol." />
         <meta property='og:image:width' content='400' />
         <meta property='og:image:height' content='400' />
